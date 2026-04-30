@@ -1,0 +1,204 @@
+package com.deliberation.controller.inscription;
+
+import com.deliberation.dto.inscription.InscriptionDTO;
+import com.deliberation.dto.inscription.response.InscriptionRequestDTO;
+import com.deliberation.model.enums.TypeMotif;
+import com.deliberation.model.inscription.*;
+import com.deliberation.model.setting.Pays;
+import com.deliberation.service.inscription.*;
+import com.deliberation.service.setting.PaysService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/inscriptions")
+public class InscriptionController {
+
+    private final InscriptionService service;
+    private final AnneeService anneeService;
+    private final MentionService mentionService;
+    private final PaysService paysService;
+    private final EtudiantService etudiantService;
+
+    private static final Logger logger = LoggerFactory.getLogger(InscriptionController.class);
+
+    public InscriptionController(InscriptionService service,
+                                 AnneeService anneeService,
+                                 MentionService mentionService,
+                                 PaysService paysService,
+                                 EtudiantService etudiantService) {
+        this.service = service;
+        this.anneeService = anneeService;
+        this.mentionService = mentionService;
+        this.paysService = paysService;
+        this.etudiantService = etudiantService;
+    }
+
+    @GetMapping
+    @Operation(summary = "Lister les inscriptions")
+    public List<Inscription> all() {
+        logger.info("[InscriptionController] GET /api/inscriptions");
+        return service.getAll();
+    }
+
+    @GetMapping("/liste/{type}/{id}")
+    @Operation(summary = "Lister les inscriptions")
+    public List<Inscription> getByType(@PathVariable String id,  @PathVariable TypeMotif type) {
+        logger.info("[InscriptionController] GET /api/inscriptions/{}/{}", type, id);
+
+        return service.getAll(id, type);
+    }
+
+    @GetMapping("/etudiant/{etudiantId}/annee/{anneeId}")
+    @Operation(summary = "Lister les inscriptions d'un étudiant par année")
+    public List<Inscription> getInscriptionEtudiantByAnnee(
+            @PathVariable String etudiantId,
+            @PathVariable String anneeId) {
+
+        logger.info("[InscriptionController] GET /api/inscriptions/etudiant/{}/annee/{}",
+                etudiantId, anneeId);
+
+        return service.getAll(etudiantId, anneeId);
+    }
+
+    @GetMapping("/annee/{anneeId}/mention/{mentionId}")
+    @Operation(summary = "Lister les inscriptions d'un étudiant par année")
+    public List<Inscription> getInscriptionMentionByAnnee(
+            @PathVariable String anneeId,
+            @PathVariable String mentionId) {
+
+        logger.info("[InscriptionController] GET /api/inscriptions/annee/{}/mention/{}",
+                anneeId, mentionId);
+
+        return service.getAllBy(anneeId, mentionId);
+    }
+
+    @GetMapping("/etudiant/{etudiantId}/annee/{anneeId}/mention/{mentionId}")
+    @Operation(summary = "Lister les inscriptions d'un étudiant par année")
+    public ResponseEntity<Inscription> getInscriptionEtudiantAnneeByMention(
+            @PathVariable String etudiantId,
+            @PathVariable String anneeId,
+            @PathVariable String mentionId
+            ) {
+
+        logger.info("[InscriptionController] GET /api/inscriptions/etudiant/{}/annee/{}/mention/{}",
+                etudiantId, anneeId, mentionId);
+
+        return service.get(etudiantId, anneeId, mentionId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Obtenir une inscription par ID")
+    public ResponseEntity<Inscription> get(@PathVariable String id) {
+
+        logger.info("[InscriptionController] GET /api/inscriptions/{}", id);
+
+        return service.get(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // Création simple (étudiant existant)
+    @PostMapping
+    @Operation(summary = "Créer une inscription")
+    public ResponseEntity<Inscription> create(@RequestBody InscriptionDTO dto) {
+
+        logger.info("[InscriptionController] Création inscription");
+
+        Etudiant etudiant = etudiantService.get(dto.etudiantId)
+                .orElseThrow(() -> new IllegalArgumentException("Étudiant introuvable"));
+
+        AnneeAcademique annee = anneeService.get(dto.anneeId)
+                .orElseThrow(() -> new IllegalArgumentException("Année introuvable"));
+
+        Mention mention = mentionService.get(dto.mentionId)
+                .orElseThrow(() -> new IllegalArgumentException("Mention introuvable"));
+
+        Inscription instance = new Inscription();
+        instance.fromDTO(dto, etudiant, annee, mention);
+
+        Inscription created = service.create(instance);
+
+        return ResponseEntity
+                .created(URI.create("/api/inscriptions/" + created.getId()))
+                .body(created);
+    }
+
+    // Création complète (nouvel étudiant + inscription)
+    @PostMapping("/add_all")
+    @Operation(summary = "Créer une inscription avec étudiant")
+    public ResponseEntity<Inscription> createFull(@RequestBody InscriptionRequestDTO dto) {
+
+        logger.info("[InscriptionController] Création complète inscription");
+
+        Pays pays = paysService.get(dto.etudiant.paysNaissanceId)
+                .orElseThrow(() -> new IllegalArgumentException("Pays introuvable"));
+
+        Etudiant etudiant = new Etudiant();
+        etudiant.fromDTO(dto.etudiant, pays);
+
+        AnneeAcademique annee = anneeService.get(dto.inscription.anneeId)
+                .orElseThrow(() -> new IllegalArgumentException("Année introuvable"));
+
+        Mention mention = mentionService.get(dto.inscription.mentionId)
+                .orElseThrow(() -> new IllegalArgumentException("Mention introuvable"));
+
+        Inscription inscription = new Inscription();
+        inscription.fromDTO(dto.inscription, null, annee, mention);
+
+        Inscription saved = service.create(etudiant, inscription);
+
+        return ResponseEntity
+                .created(URI.create("/api/inscriptions/add_all" + saved.getId()))
+                .body(saved);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Mettre à jour une inscription")
+    public ResponseEntity<Inscription> update(@PathVariable String id,
+                                              @RequestBody InscriptionDTO dto) {
+
+        return service.get(id)
+                .map(existing -> {
+
+                    if (dto.etudiantId != null) {
+                        Etudiant etudiant = etudiantService.get(dto.etudiantId)
+                                .orElseThrow(() -> new IllegalArgumentException("Étudiant introuvable"));
+                        existing.setEtudiant(etudiant);
+                    }
+
+                    if (dto.anneeId != null) {
+                        AnneeAcademique annee = anneeService.get(dto.anneeId)
+                                .orElseThrow(() -> new IllegalArgumentException("Année introuvable"));
+                        existing.setAnnee(annee);
+                    }
+
+                    existing.fromDTO(dto, null, null, null);
+
+                    return ResponseEntity.ok(service.update(id, existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Supprimer une inscription")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+
+        if (service.get(id).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}

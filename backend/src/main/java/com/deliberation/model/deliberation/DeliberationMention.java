@@ -1,0 +1,90 @@
+package com.deliberation.model.deliberation;
+
+import com.deliberation.dto.cotation.NoteMentionDetailDTO;
+import com.deliberation.dto.cotation.SessionDTO;
+import com.deliberation.dto.deliberation.DeliberationMentionDTO;
+import com.deliberation.model.ModelBase;
+import com.deliberation.model.cotation.MentionEcueDetail;
+import com.deliberation.model.cotation.Semestre;
+import com.deliberation.model.cotation.Session;
+import com.deliberation.model.inscription.AnneeAcademique;
+import com.deliberation.model.inscription.Inscription;
+import com.deliberation.model.inscription.Mention;
+import jakarta.persistence.*;
+
+import java.util.UUID;
+
+@Entity
+//@Table(name = "etudiant")
+public class DeliberationMention extends ModelBase {
+    @ManyToOne
+    private Mention mention;
+
+    @ManyToOne
+    private Semestre semestre;
+
+    @ManyToOne
+    private AnneeAcademique annee;
+
+    @ManyToOne
+    private Session session;
+
+    public Mention getMention() {
+        return mention;
+    }
+
+    public void setMention(Mention mention) {
+        this.mention = mention;
+    }
+
+    public Semestre getSemestre() {
+        return semestre;
+    }
+
+    public void setSemestre(Semestre semestre) {
+        this.semestre = semestre;
+    }
+
+    public AnneeAcademique getAnnee() {
+        return annee;
+    }
+
+    public void setAnnee(AnneeAcademique annee) {
+        this.annee = annee;
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public void setSession(Session session) {
+        this.session = session;
+    }
+
+    /***
+     *
+     * @param dto
+     * @param mention
+     * @param semestre
+     * @param annee
+     * @param session
+     */
+    public void fromDTO(DeliberationMentionDTO dto, Mention mention, Semestre semestre, AnneeAcademique annee, Session session)
+    {
+        if (dto == null) return;
+
+        setId(dto.id);
+
+        if(mention != null)
+            setMention(mention);
+
+        if(semestre != null)
+            setSemestre(semestre);
+
+        if(annee != null)
+            setAnnee(annee);
+
+        if(session != null)
+            setSession(session);
+    }
+}

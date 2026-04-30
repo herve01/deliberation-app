@@ -1,0 +1,40 @@
+.sidebar{
+    width:220px;
+    height:100vh;
+    background:#1e293b;
+    display:flex;
+    flex-direction:column;
+    padding:20px;
+}
+
+.logo{
+    color:white;
+    margin-bottom:30px;
+}
+
+.menu-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px;
+    text-decoration:none;
+    color:white;
+    border-radius:6px;
+    transition:0.3s;
+}
+
+.menu-item:hover{
+    background:#334153;
+}
+
+.icon{
+    width:20px;
+    height:20px;
+    fill:white;
+}
+
+/* STYLE ACTIF */
+.menu-item.active{
+    background:#334155;
+    font-weight:bold;
+}
