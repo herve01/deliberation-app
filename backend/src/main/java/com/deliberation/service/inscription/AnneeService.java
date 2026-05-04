@@ -44,6 +44,11 @@ public class AnneeService implements IService<AnneeAcademique, String> {
         return repository.findById(id);
     }
 
+
+    public Optional<AnneeAcademique> findByAnnee(String annee) {
+        return repository.findByAnnee(annee);
+    }
+
     @Override
     public List<AnneeAcademique> getAll() {
         return repository.findAll();

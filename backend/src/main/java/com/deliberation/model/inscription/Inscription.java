@@ -29,7 +29,8 @@ public class Inscription extends ModelBase {
     private Boolean estNouvelle;
 
     @Lob
-    @JoinColumn(nullable = false)
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "photo", columnDefinition = "TEXT", nullable = true)
     private String photo;
 
     public Etudiant getEtudiant() {

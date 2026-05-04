@@ -25,118 +25,187 @@ public class AnneeController {
         this.service = service;
     }
 
+    // =========================
+    // GET ALL
+    // =========================
     @GetMapping
     @Operation(
             summary = "Lister les années académiques",
-            description = "Retourne la liste complète des années académiques"
+            description = "Retourne la liste complète des années académiques disponibles dans le système"
     )
     public List<AnneeAcademique> all() {
-        logger.info("[AnneeController] GET /api/annees - Récupération de toutes les années académiques");
+        logger.info("[AnneeController] GET /api/annees");
         return service.getAll();
     }
 
+    // =========================
+    // GET BY ID
+    // =========================
     @GetMapping("/{id}")
     @Operation(
             summary = "Obtenir une année académique par ID",
-            description = "Retourne une année académique à partir de son identifiant"
+            description = "Retourne une année académique à partir de son identifiant unique"
     )
-    @ApiResponses(value = {
+    @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Année trouvée"),
             @ApiResponse(responseCode = "404", description = "Année introuvable")
     })
     public ResponseEntity<AnneeAcademique> get(@PathVariable String id) {
 
-        logger.info("[AnneeController] GET /api/annees/{} - Récupération", id);
+        logger.info("[AnneeController] GET /api/annees/{}", id);
 
         return service.get(id)
-                .map(instance -> {
-                    logger.info("[AnneeController] Année {} trouvée", id);
-                    return ResponseEntity.ok(instance);
-                })
-                .orElseGet(() -> {
-                    logger.warn("[AnneeController] Année {} introuvable", id);
-                    return ResponseEntity.notFound().build();
-                });
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // =========================
+    // CREATE
+    // =========================
     @PostMapping
     @Operation(
             summary = "Créer une année académique",
-            description = "Crée une nouvelle année académique à partir des données fournies"
+            description = "Crée une nouvelle année académique à partir des données fournies (ex: 2023-2024)"
     )
-    @ApiResponses(value = {
+    @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Année créée avec succès"),
-            @ApiResponse(responseCode = "400", description = "Requête invalide")
+            @ApiResponse(responseCode = "400", description = "Données invalides")
     })
     public ResponseEntity<AnneeAcademique> create(@RequestBody AnneeAcademiqueDTO dto) {
 
-        logger.info("[AnneeController] POST /api/annees - Création d'une année académique");
+        logger.info("[AnneeController] POST /api/annees");
 
         AnneeAcademique instance = new AnneeAcademique();
         instance.fromDTO(dto);
 
         AnneeAcademique created = service.create(instance);
 
-        logger.info("[AnneeController] Année créée avec succès - ID: {}", created.getId());
-
         return ResponseEntity
                 .created(URI.create("/api/annees/" + created.getId()))
                 .body(created);
     }
 
+    // =========================
+    // UPDATE
+    // =========================
     @PutMapping("/{id}")
     @Operation(
             summary = "Mettre à jour une année académique",
             description = "Met à jour les informations d'une année académique existante"
     )
-    @ApiResponses(value = {
+    @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Année mise à jour"),
             @ApiResponse(responseCode = "404", description = "Année introuvable")
     })
     public ResponseEntity<AnneeAcademique> update(@PathVariable String id,
                                                   @RequestBody AnneeAcademiqueDTO dto) {
 
-        logger.info("[AnneeController] PUT /api/annees/{} - Mise à jour", id);
+        logger.info("[AnneeController] PUT /api/annees/{}", id);
 
         return service.get(id)
                 .map(existing -> {
-
                     existing.fromDTO(dto);
-
                     AnneeAcademique updated = service.update(id, existing);
-
-                    logger.info("[AnneeController] Année {} mise à jour avec succès", id);
-
                     return ResponseEntity.ok(updated);
                 })
-                .orElseGet(() -> {
-                    logger.warn("[AnneeController] Année {} introuvable pour mise à jour", id);
-                    return ResponseEntity.notFound().build();
-                });
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // =========================
+    // DELETE
+    // =========================
     @DeleteMapping("/{id}")
     @Operation(
             summary = "Supprimer une année académique",
-            description = "Supprime une année académique à partir de son identifiant"
+            description = "Supprime définitivement une année académique à partir de son identifiant"
     )
-    @ApiResponses(value = {
+    @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Année supprimée"),
             @ApiResponse(responseCode = "404", description = "Année introuvable")
     })
     public ResponseEntity<Void> delete(@PathVariable String id) {
 
-        logger.info("[AnneeController] DELETE /api/annees/{} - Suppression", id);
+        logger.info("[AnneeController] DELETE /api/annees/{}", id);
 
         if (service.get(id).isEmpty()) {
-            logger.warn("[AnneeController] Année {} introuvable pour suppression", id);
             return ResponseEntity.notFound().build();
         }
 
         service.delete(id);
-
-        logger.info("[AnneeController] Année {} supprimée avec succès", id);
-
         return ResponseEntity.noContent().build();
+    }
+
+    // =========================
+    // SEARCH BY ANNEE
+    // =========================
+    @GetMapping("/search")
+    @Operation(
+            summary = "Rechercher une année académique par libellé",
+            description = "Retourne une année académique à partir du champ année (ex: 2023-2024)"
+    )
+    public ResponseEntity<AnneeAcademique> getByAnnee(@RequestParam String annee) {
+
+        logger.info("[AnneeController] SEARCH annee={}", annee);
+
+        return service.findByAnnee(annee)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // =========================
+    // CURRENT YEAR
+    // =========================
+    @GetMapping("/current")
+    @Operation(
+            summary = "Obtenir l'année académique en cours",
+            description = "Retourne l'année académique active selon la date actuelle"
+    )
+    public ResponseEntity<AnneeAcademique> getCurrentYear() {
+
+        AnneeAcademique current = service.getCurrentYear();
+
+        if (current == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(current);
+    }
+
+    // =========================
+    // LAST YEAR
+    // =========================
+    @GetMapping("/previous")
+    @Operation(
+            summary = "Obtenir la dernière année académique clôturée",
+            description = "Retourne la dernière année académique dont la date de clôture est passée"
+    )
+    public ResponseEntity<AnneeAcademique> getLastYear() {
+
+        AnneeAcademique last = service.getLastYear();
+
+        if (last == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(last);
+    }
+
+    // =========================
+    // NEXT YEAR
+    // =========================
+    @GetMapping("/next")
+    @Operation(
+            summary = "Obtenir la prochaine année académique",
+            description = "Retourne la prochaine année académique dont la date d'ouverture est à venir"
+    )
+    public ResponseEntity<AnneeAcademique> getNextYear() {
+
+        AnneeAcademique next = service.getNextYear();
+
+        if (next == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(next);
     }
 }

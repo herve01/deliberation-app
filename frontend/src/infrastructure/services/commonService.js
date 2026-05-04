@@ -1,19 +1,48 @@
-// src/services/api.js
 import { http } from "./http";
 import utils from "@src/infrastructure/utils";
 
 const baseUrl = `${utils.url}/api`;
 
-// 🔥 fonctions génériques
-const getAll = async (entity) => {
-  const { data } = await http.get(`/${entity}`);
-  console.log("GET:", `${baseUrl}/${entity}`);
+// helper
+const buildUrl = (entity, path = "") => {
+  let url = `/${entity}`;
+  if (path) url += `/${path}`;
+  return url;
+};
+
+// GET ALL ou avec path + params
+const getAll = async (entity, options = {}) => {
+  const { path = "", params = {} } = options;
+
+  const url = buildUrl(entity, path);
+
+  const { data } = await http.get(url, { params });
+  console.log("GET:", `${baseUrl}${url}`);
+
   return data;
 };
 
-const get = async (entity, id) => {
-  const { data } = await http.get(`/${entity}/${id}`);
-  console.log("GET:", `${baseUrl}/${entity}/${id}`);
+// GET (id OU path custom)
+const get = async (entity, arg = null, options = {}) => {
+  let url = `/${entity}`;
+
+  // cas 1 : ID
+  if (typeof arg === "string" || typeof arg === "number") {
+    url += `/${arg}`;
+  }
+
+  // cas 2 : path custom
+  if (typeof arg === "object" && arg !== null) {
+    options = arg;
+  }
+
+  if (options.path) {
+    url += `/${options.path}`;
+  }
+
+  const { data } = await http.get(url, { params: options.params || {} });
+
+  console.log("GET:", `${baseUrl}${url}`);
   return data;
 };
 
@@ -26,7 +55,7 @@ const search = async (entity, q) => {
 
 const add = async (entity, dto) => {
   const { data } = await http.post(`/${entity}`, dto);
-  console.log("POST:", `${baseUrl}/${entity}`, dto);
+  console.log("POST:", `${baseUrl}/${entity}`);
   return data;
 };
 
@@ -47,14 +76,13 @@ const login = async (entity, dto) => {
   return data;
 };
 
-// ✅ export unique
-const api = {
+// export unique
+export default {
   getAll,
+  get,
   search,
   add,
   update,
   remove,
   login,
 };
-
-export default api;
