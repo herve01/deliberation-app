@@ -1,24 +1,24 @@
 import api from "@src/infrastructure/services/commonService";
 
-const entity = "jury_membres";
+const entity = "users";
 
 export default {
   // -------------------------
   // CRUD
   // -------------------------
 
-  // GET /api/jury_membres
+  // GET /api/users
   getAll: () => api.getAll(entity),
 
-  // GET /api/jury_membres/{id}
+  // GET /api/users/{id}
   getById: (id) => api.get(entity, id),
 
-  // POST /api/jury_membres
+  // POST /api/users
   add: (dto) => api.add(entity, dto),
 
-  // PUT /api/jury_membres/{id}
+  // PUT /api/users/{id}
   update: (id, dto) => api.update(entity, id, dto),
 
-  // DELETE /api/jury_membres/{id}
+  // DELETE /api/users/{id}
   delete: (id) => api.remove(entity, id),
 };

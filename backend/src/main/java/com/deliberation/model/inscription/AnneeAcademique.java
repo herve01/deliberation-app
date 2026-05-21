@@ -1,16 +1,11 @@
 package com.deliberation.model.inscription;
 
-import com.deliberation.dto.deliberation.MentionJuryMembreDetailDTO;
 import com.deliberation.dto.inscription.AnneeAcademiqueDTO;
 import com.deliberation.model.ModelBase;
-import com.deliberation.model.deliberation.JuryMembre;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Entity
 //@Table(name = "annee_academique")
@@ -25,6 +20,9 @@ public class AnneeAcademique extends ModelBase {
 
     @Column(name = "date_cloture")
     private LocalDate dateCloture;
+
+    @Column(name = "date_limite_inscription")
+    private LocalDate dateLimiteInscription;
 
     public String getAnnee() {
         return annee;
@@ -50,6 +48,14 @@ public class AnneeAcademique extends ModelBase {
         this.dateCloture = dateCloture;
     }
 
+    public LocalDate getDateLimiteInscription() {
+        return dateLimiteInscription;
+    }
+
+    public void setDateLimiteInscription(LocalDate dateLimiteInscription) {
+        this.dateLimiteInscription = dateLimiteInscription;
+    }
+
     public void fromDTO(AnneeAcademiqueDTO dto)
     {
         if (dto == null) return;
@@ -58,6 +64,7 @@ public class AnneeAcademique extends ModelBase {
         setAnnee(dto.annee);
         setDateOuverture(dto.dateOuverture);
         setDateCloture(dto.dateCloture);
+        setDateLimiteInscription(dto.dateLimiteInscription);
     }
 
     @Override

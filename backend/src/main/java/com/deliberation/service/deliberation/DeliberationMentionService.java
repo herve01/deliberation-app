@@ -46,4 +46,5 @@ public class DeliberationMentionService implements IService<DeliberationMention,
     public List<DeliberationMention> getAll() {
         return repository.findAll();
     }
+
 }

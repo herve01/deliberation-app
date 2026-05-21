@@ -6,5 +6,6 @@ public class MentionDTO {
     public String filiereId;
 
     public String intitule;
-    public Integer numeroSemestre;
+    public Integer numeroSemestreIncrementor;
+    public Integer maxJuryMembre;
 }

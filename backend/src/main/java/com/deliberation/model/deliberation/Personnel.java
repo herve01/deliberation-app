@@ -1,24 +1,17 @@
 package com.deliberation.model.deliberation;
 
-import com.deliberation.dto.deliberation.DeliberationMentionDetailDTO;
-import com.deliberation.dto.deliberation.JuryMembreDTO;
+import com.deliberation.dto.deliberation.PersonnelDTO;
 import com.deliberation.model.ModelBase;
-import com.deliberation.model.cotation.Ecue;
-import com.deliberation.model.cotation.Semestre;
-import com.deliberation.model.inscription.Inscription;
-import com.deliberation.model.inscription.Mention;
 import com.deliberation.model.setting.Pays;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Entity
 //@Table(name = "etudiant")
-public class JuryMembre extends ModelBase {
+public class Personnel extends ModelBase {
     private String matricule;
     private String nom;
     private String postnom;
@@ -119,7 +112,7 @@ public class JuryMembre extends ModelBase {
      * @param dto
      * @param pays
      */
-    public void fromDTO(JuryMembreDTO dto, Pays pays)
+    public void fromDTO(PersonnelDTO dto, Pays pays)
     {
         if (dto == null) return;
 

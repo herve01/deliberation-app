@@ -21,4 +21,7 @@ export default {
 
   // DELETE /api/mention_ecue_details/{id}
   delete: (id) => api.remove(entity, id),
+
+  // GET /etudiant/{etudiantId}/annee/{anneeId}
+  getAllByMentionSemestreAnnee: (mentionId, semestreId, anneeId) => api.getAll(entity, { path: `mention/${mentionId}/semestre/${semestreId}/annee/${anneeId}`,}),
 };

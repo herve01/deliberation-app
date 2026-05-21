@@ -12,4 +12,9 @@ import java.util.Optional;
 public interface NiveauRepository extends JpaRepository<Niveau, String> {
 
     List<Niveau> findAllByOrderByOrdreAsc();
+
+    List<Niveau> findAllByOrderByIsOldSystemAscOrdreAsc();
+
+    List<Niveau> findAllByIsOldSystemOrderByOrdreAsc(Boolean isOldSystem);
+
 }

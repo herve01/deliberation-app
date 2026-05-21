@@ -18,15 +18,19 @@ import java.util.UUID;
 //@Table(name = "etudiant")
 public class DeliberationMention extends ModelBase {
     @ManyToOne
+    @JoinColumn(name = "mention_id")
     private Mention mention;
 
     @ManyToOne
+    @JoinColumn(name = "semestre_id")
     private Semestre semestre;
 
     @ManyToOne
+    @JoinColumn(name = "annee_id")
     private AnneeAcademique annee;
 
     @ManyToOne
+    @JoinColumn(name = "session_id")
     private Session session;
 
     public Mention getMention() {

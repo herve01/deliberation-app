@@ -11,5 +11,5 @@ import java.util.Optional;
 @Repository
 public interface EcueRepository extends JpaRepository<Ecue, String> {
 
-    //List<Ecue> findByUe_Id(String ueId);
+    List<Ecue> findByUeId(String ueId);
 }

@@ -3,8 +3,10 @@ package com.deliberation.model.cotation;
 import com.deliberation.dto.cotation.EcueDTO;
 import com.deliberation.dto.cotation.MentionEcueDetailDTO;
 import com.deliberation.model.ModelBase;
+import com.deliberation.model.inscription.AnneeAcademique;
 import com.deliberation.model.inscription.Inscription;
 import com.deliberation.model.inscription.Mention;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -26,7 +28,13 @@ public class MentionEcueDetail extends ModelBase {
     @JoinColumn(name = "semestre_id")
     private Semestre semestre;
 
+    @ManyToOne
+    @JoinColumn(name = "annee_id")
+    private AnneeAcademique annee;
+
+    @JoinColumn(name = "note_annee")
     private Integer noteAnnee;
+
     private Float credit;
 
     public Mention getMention() {
@@ -53,6 +61,14 @@ public class MentionEcueDetail extends ModelBase {
         this.semestre = semestre;
     }
 
+    public AnneeAcademique getAnnee() {
+        return annee;
+    }
+
+    public void setAnnee(AnneeAcademique annee) {
+        this.annee = annee;
+    }
+
     public Integer getNoteAnnee() {
         return noteAnnee;
     }
@@ -76,7 +92,7 @@ public class MentionEcueDetail extends ModelBase {
      * @param ecue
      * @param semestre
      */
-    public void fromDTO(MentionEcueDetailDTO dto, Mention mention, Ecue ecue, Semestre semestre)
+    public void fromDTO(MentionEcueDetailDTO dto, Mention mention, Ecue ecue, Semestre semestre, AnneeAcademique annee)
     {
         if (dto == null) return;
 
@@ -92,5 +108,14 @@ public class MentionEcueDetail extends ModelBase {
 
         if(semestre != null)
             setSemestre(semestre);
+
+        if(annee != null)
+            setAnnee(annee);
+    }
+
+    @JsonProperty(value = "ecueName", access = JsonProperty.Access.READ_ONLY)
+    public String getEcueName()
+    {
+        return String.format("%s", getEcue().getIntitule());
     }
 }

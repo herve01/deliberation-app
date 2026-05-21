@@ -1,11 +1,8 @@
 package com.deliberation.model.setting;
 
-import com.deliberation.dto.deliberation.MentionJuryMembreDetailDTO;
 import com.deliberation.dto.setting.UserDTO;
 import com.deliberation.model.ModelBase;
-import com.deliberation.model.deliberation.JuryMembre;
 import com.deliberation.model.enums.Role;
-import com.deliberation.model.inscription.AnneeAcademique;
 import jakarta.persistence.*;
 
 @Entity

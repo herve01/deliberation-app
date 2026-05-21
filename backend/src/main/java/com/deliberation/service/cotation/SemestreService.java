@@ -22,7 +22,7 @@ public class SemestreService implements IService<Semestre, String> {
 
     @Override
     public Semestre create(Semestre instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 

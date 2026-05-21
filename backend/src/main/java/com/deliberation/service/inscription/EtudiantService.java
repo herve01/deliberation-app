@@ -22,7 +22,7 @@ public class EtudiantService implements IService<Etudiant, String> {
 
     @Override
     public Etudiant create(Etudiant instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 

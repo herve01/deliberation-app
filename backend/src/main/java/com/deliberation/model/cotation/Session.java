@@ -5,6 +5,7 @@ import com.deliberation.dto.cotation.SessionDTO;
 import com.deliberation.model.ModelBase;
 import com.deliberation.model.inscription.Mention;
 import com.deliberation.model.inscription.Niveau;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -45,5 +46,13 @@ public class Session extends ModelBase {
 
         if(semestre != null)
             setSemestre(semestre);
+    }
+
+    @JsonProperty(value = "sessionName", access = JsonProperty.Access.READ_ONLY)
+    public String getSessionName()
+    {
+        return numero < 0 ? "Annuel" :
+                numero % 2 == 0 ? "Rattrapage" :
+                String.format("Session %s", numero);
     }
 }

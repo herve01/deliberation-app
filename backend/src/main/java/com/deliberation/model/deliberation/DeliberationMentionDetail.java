@@ -20,10 +20,15 @@ public class DeliberationMentionDetail extends ModelBase {
     @JoinColumn(name = "inscription_id")
     private Inscription inscription;
 
+    @ManyToOne
+    @JoinColumn(name = "deliberation_id")
+    private DeliberationMention deliberation;
+
     private Float pourcentage;
     private Float note;
     private Float total;
     private Boolean aEchoue;
+
     @Enumerated(EnumType.STRING)
     private MentionType mention;
 
@@ -75,12 +80,20 @@ public class DeliberationMentionDetail extends ModelBase {
         this.mention = mention;
     }
 
+    public DeliberationMention getDeliberation() {
+        return deliberation;
+    }
+
+    public void setDeliberation(DeliberationMention deliberation) {
+        this.deliberation = deliberation;
+    }
+
     /***
      *
      * @param dto
      * @param inscription
      */
-    public void fromDTO(DeliberationMentionDetailDTO dto, Inscription inscription)
+    public void fromDTO(DeliberationMentionDetailDTO dto, DeliberationMention deliberation, Inscription inscription)
     {
         if (dto == null) return;
 
@@ -91,7 +104,11 @@ public class DeliberationMentionDetail extends ModelBase {
         setaEchoue(dto.aEchoue);
         setMention(dto.mention);
 
+        if(deliberation != null)
+            setDeliberation(deliberation);
+
         if(inscription != null)
             setInscription(inscription);
+
     }
 }

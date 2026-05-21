@@ -6,6 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 import "@src/styles/sidebar.css";
+import '@coreui/coreui/dist/css/coreui.min.css'
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

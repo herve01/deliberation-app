@@ -8,4 +8,5 @@ public class AnneeAcademiqueDTO {
     public String annee;
     public LocalDate dateOuverture;
     public LocalDate dateCloture;
+    public LocalDate dateLimiteInscription;
 }

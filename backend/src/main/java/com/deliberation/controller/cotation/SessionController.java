@@ -41,6 +41,17 @@ public class SessionController {
         return service.getAll();
     }
 
+    @GetMapping("/semestre-numero-incrementor/{incrementor}")
+    @Operation(
+            summary = "Lister les sessions",
+            description = "Retourne la liste complète des sessions"
+    )
+    @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
+    public List<Session> all(@PathVariable Integer incrementor) {
+        logger.info("[SessionController] GET /api/sessions - Récupération de toutes les sessions");
+        return service.getAll(incrementor);
+    }
+
     @GetMapping("/{id}")
     @Operation(
             summary = "Obtenir une session par ID",

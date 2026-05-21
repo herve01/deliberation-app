@@ -40,6 +40,28 @@ public class FiliereController {
         return service.getAll();
     }
 
+    @GetMapping("/with-domaine/{withDomaine}")
+    @Operation(
+            summary = "Lister les filières",
+            description = "Retourne la liste complète des filières avec ou sans domaine"
+    )
+    @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
+    public List<Filiere> getAllWithRelations(@PathVariable("withDomaine") boolean withDomaine) {
+        logger.info("[FiliereController] GET /api/filieres/with-domaine/{} - Récupération des filières (withDomaine={})", withDomaine, withDomaine);
+        return service.getAll(withDomaine);
+    }
+
+    @GetMapping("domaine/{domaineId}")
+    @Operation(
+            summary = "Lister les filières par domaine",
+            description = "Retourne la liste complète des filières par domaine"
+    )
+    @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
+    public List<Filiere> all(@PathVariable String domaineId) {
+        logger.info("[FiliereController] GET /api/filieres/domaine/{domaineId} - Récupération de toutes les filières");
+        return service.getAll(domaineId);
+    }
+
     @GetMapping("/{id}")
     @Operation(
             summary = "Obtenir une filière par ID",

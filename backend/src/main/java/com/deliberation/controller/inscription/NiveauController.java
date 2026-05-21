@@ -1,7 +1,10 @@
 package com.deliberation.controller.inscription;
 
 import com.deliberation.dto.inscription.NiveauDTO;
+import com.deliberation.model.inscription.Cycle;
+import com.deliberation.model.inscription.Domaine;
 import com.deliberation.model.inscription.Niveau;
+import com.deliberation.service.inscription.CycleService;
 import com.deliberation.service.inscription.NiveauService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -19,10 +22,12 @@ import java.util.List;
 public class NiveauController {
 
     private final NiveauService service;
+    private final CycleService cycleService;
     private static final Logger logger = LoggerFactory.getLogger(NiveauController.class);
 
-    public NiveauController(NiveauService service) {
+    public NiveauController(NiveauService service, CycleService cycleService) {
         this.service = service;
+        this.cycleService = cycleService;
     }
 
     @GetMapping
@@ -34,6 +39,25 @@ public class NiveauController {
     public List<Niveau> all() {
         logger.info("[NiveauController] GET /api/niveaux - Récupération de tous les niveaux");
         return service.getAll();
+    }
+
+    @GetMapping("/all/{isOldSystem}")
+    @Operation(
+            summary = "Lister les niveaux",
+            description = "Retourne la liste complète des niveaux selon le système"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Liste des niveaux récupérée avec succès"
+    )
+    public List<Niveau> all(@PathVariable("isOldSystem") Boolean isOldSystem) {
+
+        logger.info(
+                "[NiveauController] GET /api/niveaux/all/{} - Récupération des niveaux",
+                isOldSystem
+        );
+
+        return service.getAll(isOldSystem);
     }
 
     @GetMapping("/{id}")
@@ -73,8 +97,11 @@ public class NiveauController {
 
         logger.info("[NiveauController] POST /api/niveaux - Création d'un niveau");
 
+        Cycle cycle = cycleService.get(dto.cycleId)
+                .orElseThrow(() -> new IllegalArgumentException("Domaine introuvable"));
+
         Niveau instance = new Niveau();
-        instance.fromDTO(dto);
+        instance.fromDTO(dto, cycle);
 
         Niveau created = service.create(instance);
 
@@ -102,7 +129,15 @@ public class NiveauController {
         return service.get(id)
                 .map(existing -> {
 
-                    existing.fromDTO(dto);
+
+                    Cycle cycle = null;
+                    if (dto.cycleId != null) {
+                        cycle = cycleService.get(dto.cycleId)
+                                .orElseThrow(() -> new IllegalArgumentException("Domaine introuvable"));
+
+                        existing.setCycle(cycle);
+                    }
+                    existing.fromDTO(dto, null);
 
                     Niveau updated = service.update(id, existing);
 

@@ -1,22 +1,17 @@
 package com.deliberation.model.deliberation;
 
-import com.deliberation.dto.deliberation.JuryMembreDTO;
 import com.deliberation.dto.deliberation.MentionJuryMembreDetailDTO;
 import com.deliberation.model.ModelBase;
 import com.deliberation.model.enums.JuryRole;
 import com.deliberation.model.inscription.AnneeAcademique;
-import com.deliberation.model.setting.Pays;
 import jakarta.persistence.*;
-
-import java.time.LocalDate;
-import java.util.UUID;
 
 @Entity
 //@Table(name = "etudiant")
 public class MentionJuryMembreDetail extends ModelBase {
     @ManyToOne
-    @JoinColumn(name = "jury_id")
-    private JuryMembre jury;
+    @JoinColumn(name = "personnel_id")
+    private Personnel personnel;
 
     @Enumerated(EnumType.STRING)
     private JuryRole role;
@@ -25,12 +20,12 @@ public class MentionJuryMembreDetail extends ModelBase {
     @JoinColumn(name = "annee_id")
     private AnneeAcademique annee;
 
-    public JuryMembre getJury() {
-        return jury;
+    public Personnel getPersonnel() {
+        return personnel;
     }
 
-    public void setJury(JuryMembre jury) {
-        this.jury = jury;
+    public void setPersonnel(Personnel personnel) {
+        this.personnel = personnel;
     }
 
     public JuryRole getRole() {
@@ -52,18 +47,18 @@ public class MentionJuryMembreDetail extends ModelBase {
     /***
      *
      * @param dto
-     * @param jury
+     * @param personnel
      * @param annee
      */
-    public void fromDTO(MentionJuryMembreDetailDTO dto, JuryMembre jury, AnneeAcademique annee)
+    public void fromDTO(MentionJuryMembreDetailDTO dto, Personnel personnel, AnneeAcademique annee)
     {
         if (dto == null) return;
 
         setId(dto.id);
         setRole(dto.role);
 
-        if(jury != null)
-            setJury(jury);
+        if(personnel != null)
+            setPersonnel(personnel);
 
         if(annee != null)
             setAnnee(annee);

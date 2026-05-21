@@ -24,7 +24,7 @@ public class AnneeService implements IService<AnneeAcademique, String> {
 
     @Override
     public AnneeAcademique create(AnneeAcademique instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 

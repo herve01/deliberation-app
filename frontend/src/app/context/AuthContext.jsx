@@ -30,8 +30,8 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const data = await loginService.login({
-        nom: username,
-        password: password,
+        username: username,
+        passwd: password,
       });
 
       if (!data) return false;

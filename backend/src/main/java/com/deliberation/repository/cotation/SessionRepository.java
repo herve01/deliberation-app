@@ -13,4 +13,6 @@ public interface SessionRepository extends JpaRepository<Session, String> {
     List<Session> findBySemestreId(String semestreId);
 
     List<Session> findBySemestreIdOrderByNumeroAsc(String semestreId);
+
+    List<Session> findAllByOrderBySemestreNumeroAscNumeroAsc();
 }

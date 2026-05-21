@@ -21,4 +21,7 @@ export default {
 
   // DELETE /api/annees/{id}
   delete: (id) => api.remove(entity, id),
+
+  // GET /liste/{type}/{id}
+  getAllLMD: (isOldSystem) => api.getAll(entity, { path: `all/${isOldSystem}`,}),
 };

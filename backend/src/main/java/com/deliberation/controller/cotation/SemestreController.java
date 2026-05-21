@@ -78,11 +78,8 @@ public class SemestreController {
 
         logger.info("[SemestreController] POST /api/semestres - Création d'un semestre");
 
-        Niveau niveau = niveauService.get(dto.niveauId)
-                .orElseThrow(() -> new IllegalArgumentException("Niveau introuvable"));
-
         Semestre instance = new Semestre();
-        instance.fromDTO(dto, niveau);
+        instance.fromDTO(dto);
 
         Semestre created = service.create(instance);
 
@@ -110,13 +107,7 @@ public class SemestreController {
         return service.get(id)
                 .map(existing -> {
 
-                    Niveau niveau = null;
-                    if (dto.niveauId != null) {
-                        niveau = niveauService.get(dto.niveauId)
-                                .orElseThrow(() -> new IllegalArgumentException("Niveau introuvable"));
-                    }
-
-                    existing.fromDTO(dto, niveau);
+                    existing.fromDTO(dto);
 
                     Semestre updated = service.update(id, existing);
 

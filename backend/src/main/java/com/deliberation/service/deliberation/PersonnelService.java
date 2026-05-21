@@ -1,9 +1,7 @@
 package com.deliberation.service.deliberation;
 
-import com.deliberation.model.cotation.NoteMentionDetail;
-import com.deliberation.model.deliberation.JuryMembre;
-import com.deliberation.repository.cotation.NoteMentionDetailRepository;
-import com.deliberation.repository.deliberation.JuryMembreRepository;
+import com.deliberation.model.deliberation.Personnel;
+import com.deliberation.repository.deliberation.PersonnelRepository;
 import com.deliberation.service.IService;
 import org.springframework.stereotype.Service;
 
@@ -12,22 +10,22 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class JuryMembreService implements IService<JuryMembre, String> {
+public class PersonnelService implements IService<Personnel, String> {
 
-    private final JuryMembreRepository repository;
+    private final PersonnelRepository repository;
 
-    public JuryMembreService(JuryMembreRepository repository) {
+    public PersonnelService(PersonnelRepository repository) {
         this.repository = repository;
     }
 
     @Override
-    public JuryMembre create(JuryMembre instance) {
+    public Personnel create(Personnel instance) {
         instance.setId(UUID.randomUUID().toString());
         return repository.save(instance);
     }
 
     @Override
-    public JuryMembre update(String id, JuryMembre instance) {
+    public Personnel update(String id, Personnel instance) {
         instance.setId(id);
         return repository.save(instance);
     }
@@ -38,12 +36,13 @@ public class JuryMembreService implements IService<JuryMembre, String> {
     }
 
     @Override
-    public Optional<JuryMembre> get(String id) {
+    public Optional<Personnel> get(String id) {
         return repository.findById(id);
     }
 
     @Override
-    public List<JuryMembre> getAll() {
+    public List<Personnel> getAll() {
         return repository.findAll();
     }
+
 }

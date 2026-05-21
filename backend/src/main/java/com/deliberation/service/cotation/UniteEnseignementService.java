@@ -22,7 +22,7 @@ public class UniteEnseignementService implements IService<UniteEnseignement, Str
 
     @Override
     public UniteEnseignement create(UniteEnseignement instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 
@@ -46,4 +46,5 @@ public class UniteEnseignementService implements IService<UniteEnseignement, Str
     public List<UniteEnseignement> getAll() {
         return repository.findAll();
     }
+
 }

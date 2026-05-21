@@ -10,6 +10,7 @@ import com.deliberation.model.enums.MentionType;
 public class DeliberationMentionDetailDTO {
     public String id;
     public String inscriptionId;
+    public String deliberationId;
     public Float pourcentage;
     public Float note;
     public Float total;

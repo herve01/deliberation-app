@@ -163,6 +163,44 @@ public class InscriptionController {
                 .body(saved);
     }
 
+    @PostMapping("/annee/{anneeId}/mention/{mentionId}/add_all")
+    @Operation(summary = "Créer plusieurs inscriptions avec étudiants")
+    public ResponseEntity<List<Inscription>> createAll(
+            @RequestBody List<InscriptionRequestDTO> dtos, @PathVariable String anneeId, @PathVariable String mentionId) {
+
+        logger.info("[InscriptionController] Création multiple des inscriptions");
+        // 3. Année académique
+        AnneeAcademique annee = anneeService.get(anneeId)
+                .orElseThrow(() -> new IllegalArgumentException("Année introuvable"));
+
+        // 4. Mention
+        Mention mention = mentionService.get(mentionId)
+                .orElseThrow(() -> new IllegalArgumentException("Mention introuvable"));
+
+        List<Inscription> inscriptions = dtos.stream().map(dto -> {
+
+            // 1. Pays
+            Pays pays = paysService.get(dto.etudiant.paysNaissanceId)
+                    .orElseThrow(() -> new IllegalArgumentException("Pays introuvable"));
+
+            // 2. Étudiant
+            Etudiant etudiant = new Etudiant();
+            etudiant.fromDTO(dto.etudiant, pays);
+
+            // 5. Inscription
+            Inscription inscription = new Inscription();
+            inscription.fromDTO(dto.inscription, etudiant, annee, mention);
+            return inscription;
+        }).toList();
+
+        // 6. Sauvegarde
+        List<Inscription> saved = service.createAll(inscriptions);
+
+        return ResponseEntity
+                .created(URI.create("/api/inscriptions/annee/"+ anneeId + "/mention/" + mentionId + "/add_all")
+                ).body(saved);
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "Mettre à jour une inscription")
     public ResponseEntity<Inscription> update(@PathVariable String id,
@@ -188,6 +226,55 @@ public class InscriptionController {
                     return ResponseEntity.ok(service.update(id, existing));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+
+    @PutMapping("/update_all/{id}")
+    @Operation(summary = "Mettre à jour une inscription")
+    public ResponseEntity<Inscription> updateAll(@PathVariable String id, @RequestBody InscriptionRequestDTO dto) {
+        return service.get(id)
+            .map(existing -> {
+                if (dto.etudiant != null) {
+                    if (dto.etudiant.id != null) {
+
+                        Etudiant etudiant = etudiantService.get(dto.etudiant.id)
+                                .orElseThrow(() -> new IllegalArgumentException("Étudiant introuvable"));
+
+                        existing.setEtudiant(etudiant);
+                    }
+
+                    if (dto.etudiant.paysNaissanceId != null) {
+
+                        Pays pays = paysService.get(dto.etudiant.paysNaissanceId)
+                                .orElseThrow(() -> new IllegalArgumentException("Pays introuvable"));
+
+                        existing.getEtudiant().setPaysNaissance(pays);
+                    }
+
+                    // Mapping DTO -> Entity
+                    existing.getEtudiant().fromDTO(dto.etudiant, null);
+                }
+
+                if (dto.inscription != null) {
+
+                    if (dto.inscription.anneeId != null) {
+
+                        AnneeAcademique annee = anneeService.get(dto.inscription.anneeId)
+                                .orElseThrow(() -> new IllegalArgumentException("Année introuvable"));
+
+                        existing.setAnnee(annee);
+                    }
+
+                    existing.fromDTO(dto.inscription, null, null, null);
+                }
+
+                // Sauvegarde
+                Inscription updated = service.update(id, existing.getEtudiant(), existing);
+
+                return ResponseEntity.ok(updated);
+
+            })
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")

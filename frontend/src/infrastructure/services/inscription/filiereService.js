@@ -21,4 +21,10 @@ export default {
 
   // DELETE /api/filieres/{id}
   delete: (id) => api.remove(entity, id),
+
+  // GET /domaine/{domaineId}
+  getAllByDomaine: (domaineId) => api.getAll(entity, { path: `domaine/${domaineId}`,}),
+
+  getWithDomaineAll: (withDomaine) => api.getAll(entity, { path: `with-domaine/${withDomaine}`,}),
+
 };

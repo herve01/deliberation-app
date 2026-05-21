@@ -1,8 +1,6 @@
 package com.deliberation.service.deliberation;
 
-import com.deliberation.model.deliberation.JuryMembre;
 import com.deliberation.model.deliberation.MentionJuryMembreDetail;
-import com.deliberation.repository.deliberation.JuryMembreRepository;
 import com.deliberation.repository.deliberation.MentionJuryMembreDetailRepository;
 import com.deliberation.service.IService;
 import org.springframework.stereotype.Service;
@@ -46,4 +44,5 @@ public class MentionJuryMembreDetailService implements IService<MentionJuryMembr
     public List<MentionJuryMembreDetail> getAll() {
         return repository.findAll();
     }
+
 }

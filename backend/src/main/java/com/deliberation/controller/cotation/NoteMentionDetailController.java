@@ -2,10 +2,12 @@ package com.deliberation.controller.cotation;
 
 import com.deliberation.dto.cotation.NoteMentionDetailDTO;
 import com.deliberation.model.cotation.MentionEcueDetail;
+import com.deliberation.model.cotation.NoteMention;
 import com.deliberation.model.cotation.NoteMentionDetail;
 import com.deliberation.model.inscription.Inscription;
 import com.deliberation.service.cotation.MentionEcueDetailService;
 import com.deliberation.service.cotation.NoteMentionDetailService;
+import com.deliberation.service.cotation.NoteMentionService;
 import com.deliberation.service.inscription.InscriptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,17 +25,19 @@ import java.util.List;
 public class NoteMentionDetailController {
 
     private final NoteMentionDetailService service;
+    private final NoteMentionService noteService;
     private final InscriptionService inscriptionService;
     private final MentionEcueDetailService ecueService;
 
     private static final Logger logger = LoggerFactory.getLogger(NoteMentionDetailController.class);
 
     public NoteMentionDetailController(
-            NoteMentionDetailService service,
+            NoteMentionDetailService service, NoteMentionService noteService,
             InscriptionService inscriptionService,
             MentionEcueDetailService ecueService
     ) {
         this.service = service;
+        this.noteService = noteService;
         this.inscriptionService = inscriptionService;
         this.ecueService = ecueService;
     }
@@ -86,6 +90,9 @@ public class NoteMentionDetailController {
 
         logger.info("[NoteMentionDetailController] POST /api/note_mention_details - Création");
 
+        NoteMention note = noteService.get(dto.noteId)
+                .orElseThrow(() -> new IllegalArgumentException("Note mention introuvable"));
+
         Inscription inscription = inscriptionService.get(dto.inscriptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Inscription introuvable"));
 
@@ -93,7 +100,7 @@ public class NoteMentionDetailController {
                 .orElseThrow(() -> new IllegalArgumentException("Mention ECUE introuvable"));
 
         NoteMentionDetail instance = new NoteMentionDetail();
-        instance.fromDTO(dto, inscription, ecue);
+        instance.fromDTO(dto, note, inscription, ecue);
 
         NoteMentionDetail created = service.create(instance);
 
@@ -123,6 +130,13 @@ public class NoteMentionDetailController {
         return service.get(id)
                 .map(existing -> {
 
+                    NoteMention note = null;
+                    if (dto.noteId != null) {
+                        note = noteService.get(dto.noteId)
+                                .orElseThrow(() -> new IllegalArgumentException("Note mention introuvable"));
+                        existing.setNoteMention(note);
+                    }
+
                     Inscription inscription = null;
                     if (dto.inscriptionId != null) {
                         inscription = inscriptionService.get(dto.inscriptionId)
@@ -137,7 +151,7 @@ public class NoteMentionDetailController {
                         existing.setEcue(ecue);
                     }
 
-                    existing.fromDTO(dto, inscription, ecue);
+                    existing.fromDTO(dto, null, null, null );
 
                     NoteMentionDetail updated = service.update(id, existing);
 

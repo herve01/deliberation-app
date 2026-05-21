@@ -22,7 +22,7 @@ public class NoteMentionDetailService implements IService<NoteMentionDetail, Str
 
     @Override
     public NoteMentionDetail create(NoteMentionDetail instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 

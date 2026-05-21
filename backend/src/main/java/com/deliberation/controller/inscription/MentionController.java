@@ -46,6 +46,22 @@ public class MentionController {
         return service.getAll();
     }
 
+    @GetMapping("/filiere/{filiereId}")
+    @Operation(
+            summary = "Lister les mentions par filière",
+            description = "Retourne la liste complète des mentions associées à une filière"
+    )
+    @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
+    public List<Mention> all(@PathVariable("filiereId") String filiereId) {
+
+        logger.info(
+                "[MentionController] GET /api/mentions/filiere/{} - Récupération des mentions par filière",
+                filiereId
+        );
+
+        return service.getAll(filiereId);
+    }
+
     @GetMapping("/{id}")
     @Operation(
             summary = "Obtenir une mention par ID",

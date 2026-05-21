@@ -15,14 +15,16 @@ import java.util.UUID;
 public class FiliereService implements IService<Filiere, String> {
 
     private final FiliereRepository repository;
+    private final DomaineRepository domaineRepository;
 
-    public FiliereService(FiliereRepository repository) {
+    public FiliereService(FiliereRepository repository, DomaineRepository domaineRepository) {
         this.repository = repository;
+        this.domaineRepository = domaineRepository;
     }
 
     @Override
     public Filiere create(Filiere instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 
@@ -46,4 +48,39 @@ public class FiliereService implements IService<Filiere, String> {
     public List<Filiere> getAll() {
         return repository.findAll();
     }
+
+    public List<Filiere> getAll(Boolean withDomaine) {
+        return repository.findAll()
+                .stream()
+                .map(row -> mapping(row, withDomaine))
+                .toList();
+    }
+
+    private Filiere mapping(Filiere row, Boolean withDomaine) {
+
+        if (Boolean.TRUE.equals(withDomaine)
+                && row.getDomaine() != null
+                && row.getDomaine().getId() != null) {
+
+            row.setDomaine(
+                    domaineRepository.findById(row.getDomaine().getId())
+                            .orElse(null)
+            );
+        }
+
+        return row;
+    }
+
+    public List<Filiere> getAll(String domaineId) {
+        return repository.findByDomaineId(domaineId);
+    }
+
+    /*
+        public List<Filiere> getAll() {
+        return repository.findAll()
+                .stream()
+                .map(this::map)
+                .toList();
+    }
+     */
 }

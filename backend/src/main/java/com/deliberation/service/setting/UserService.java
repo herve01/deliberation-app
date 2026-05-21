@@ -1,5 +1,6 @@
 package com.deliberation.service.setting;
 
+import com.deliberation.dto.setting.response.UserResponseDTO;
 import com.deliberation.model.setting.User;
 import com.deliberation.repository.setting.UserRepository;
 import com.deliberation.service.IService;
@@ -66,6 +67,25 @@ public class UserService implements IService<User, String> {
     @Override
     public List<User> getAll() {
         return repository.findAll();
+    }
+
+    public List<UserResponseDTO> getDTOAll() {
+
+        return repository.findAll()
+                .stream()
+                .map(user -> {
+                    UserResponseDTO dto = new UserResponseDTO();
+
+                    dto.id = user.getId();
+                    dto.nom = user.getNom();
+                    dto.prenom = user.getPrenom();
+                    dto.username = user.getUsername();
+                    dto.email = user.getEmail();
+                    dto.role = user.getRole();
+
+                    return dto;
+                })
+                .toList();
     }
 
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";

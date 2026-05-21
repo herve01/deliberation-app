@@ -21,4 +21,7 @@ export default {
 
   // DELETE /api/mentions/{id}
   delete: (id) => api.remove(entity, id),
+
+   // GET /api/mentions/filiere/{filiereId}
+    getAllByFiliere: (filiereId) => api.getAll(entity, { path: `filiere/${filiereId}`,}),
 };

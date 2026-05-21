@@ -22,7 +22,7 @@ public class MentionEcueDetailService implements IService<MentionEcueDetail, Str
 
     @Override
     public MentionEcueDetail create(MentionEcueDetail instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 
@@ -45,5 +45,9 @@ public class MentionEcueDetailService implements IService<MentionEcueDetail, Str
     @Override
     public List<MentionEcueDetail> getAll() {
         return repository.findAll();
+    }
+
+    public List<MentionEcueDetail> getAll(String mentionId, String semestreId, String anneeId) {
+        return repository.findByMentionIdAndSemestreIdAndAnneeId(mentionId, semestreId, anneeId);
     }
 }

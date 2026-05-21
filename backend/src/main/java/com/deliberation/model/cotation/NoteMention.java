@@ -5,11 +5,9 @@ import com.deliberation.dto.cotation.NoteMentionDTO;
 import com.deliberation.model.ModelBase;
 import com.deliberation.model.inscription.AnneeAcademique;
 import com.deliberation.model.inscription.Mention;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
+import jakarta.persistence.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -81,4 +79,7 @@ public class NoteMention extends ModelBase {
         if(session != null)
             setSession(session);
     }
+
+    @Transient
+    private List<NoteMentionDetail> details;
 }

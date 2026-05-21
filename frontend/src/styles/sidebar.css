@@ -19,3 +19,9 @@
     height:20px;
     fill:white;
 }
+
+.sidebar-divider {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 10px 0;
+}

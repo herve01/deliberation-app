@@ -7,6 +7,7 @@ public class MentionEcueDetailDTO {
     public String mentionId;
     public String ecueId;
     public String semestreId;
+    public String anneeId;
     public Integer noteAnnee;
     public Float credit;
 }

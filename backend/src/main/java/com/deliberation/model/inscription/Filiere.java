@@ -1,17 +1,16 @@
 package com.deliberation.model.inscription;
 
-import com.deliberation.dto.deliberation.MentionJuryMembreDetailDTO;
 import com.deliberation.dto.inscription.FiliereDTO;
 import com.deliberation.model.ModelBase;
-import com.deliberation.model.deliberation.JuryMembre;
 import jakarta.persistence.*;
-
-import java.util.UUID;
 
 @Entity
 //@Table(name = "filiere")
 public class Filiere extends ModelBase {
     private String intitule;
+
+    @Column(name = "is_old_system")
+    private Boolean isOldSystem;
 
     @ManyToOne
     @JoinColumn(name = "domaine_id")
@@ -33,6 +32,14 @@ public class Filiere extends ModelBase {
         this.domaine = domaine;
     }
 
+    public Boolean getOldSystem() {
+        return isOldSystem;
+    }
+
+    public void setOldSystem(Boolean oldSystem) {
+        isOldSystem = oldSystem;
+    }
+
     /***
      *
      * @param dto
@@ -44,6 +51,7 @@ public class Filiere extends ModelBase {
 
         setId(dto.id);
         setIntitule(dto.intitule);
+        setOldSystem(dto.isOldSystem);
 
         if(domaine != null)
             setDomaine(domaine);

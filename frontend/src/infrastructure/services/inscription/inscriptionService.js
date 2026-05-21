@@ -36,4 +36,7 @@ export default {
 
     // POST /add_all
     addWithEtudiant: (dto) => api.add(`${entity}/add_all`, dto),
+
+      // PUT /api/inscriptions/{id}
+    updateWithEtudiant: (id, dto) => api.update(`${entity}/update_all`, id, dto),
 };

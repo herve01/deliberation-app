@@ -22,7 +22,7 @@ public class DomaineService implements IService<Domaine, String> {
 
     @Override
     public Domaine create(Domaine instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 

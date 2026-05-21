@@ -1,170 +1,314 @@
-import React, { useState, useMemo } from "react";
-import { ICON_PATHS } from "@src/assets/icons/paths";
-import "@src/styles/global.css";
+import React, { useMemo, useState } from "react";
 
-const Table = ({ columns = [], data = [], itemsPerPage = 5 }) => {
-  const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortConfig, setSortConfig] = useState(null);
+import {
+  CBadge,
+  CCard,
+  CCardBody,
+  CFormInput,
+  CInputGroup,
+  CInputGroupText,
+  CPagination,
+  CPaginationItem,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow
+} from "@coreui/react";
+
+import "bootstrap-icons/font/bootstrap-icons.css";
+
+const Table = ({
+  columns = [],
+  data = [],
+  itemsPerPage = 5,
+}) => {
+
+  const [search, setSearch] =
+    useState("");
+
+  const [currentPage, setCurrentPage] =
+    useState(1);
+
+  const [sortConfig, setSortConfig] =
+    useState(null);
 
   // SEARCH
   const filteredData = useMemo(() => {
+
     return data.filter((row) =>
       columns.some((col) => {
+
         const value = row[col.accessor];
+
         return value
           ?.toString()
           .toLowerCase()
           .includes(search.toLowerCase());
+
       })
     );
+
   }, [search, data, columns]);
 
-  // 🔃 SORT
+  // SORT
   const sortedData = useMemo(() => {
-    if (!sortConfig) return filteredData;
 
-    const { key, direction } = sortConfig;
+    if (!sortConfig) {
+      return filteredData;
+    }
+
+    const { key, direction } =
+      sortConfig;
 
     return [...filteredData].sort((a, b) => {
-      if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
-      if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
+
+      let valA = a[key];
+      let valB = b[key];
+
+      // NULL
+      if (valA == null) return 1;
+      if (valB == null) return -1;
+
+      // STRING
+      if (typeof valA === "string") {
+
+        return direction === "asc"
+          ? valA.localeCompare(valB)
+          : valB.localeCompare(valA);
+
+      }
+
+      // NUMBER / DATE
+      if (valA < valB) {
+        return direction === "asc"
+          ? -1
+          : 1;
+      }
+
+      if (valA > valB) {
+        return direction === "asc"
+          ? 1
+          : -1;
+      }
+
       return 0;
+
     });
+
   }, [filteredData, sortConfig]);
 
+  // SORT CLICK
   const handleSort = (key) => {
+
     setCurrentPage(1);
+
     setSortConfig((prev) => {
-      if (prev?.key === key && prev.direction === "asc") {
-        return { key, direction: "desc" };
+
+      if (
+        prev?.key === key &&
+        prev.direction === "asc"
+      ) {
+
+        return {
+          key,
+          direction: "desc"
+        };
       }
-      return { key, direction: "asc" };
+
+      return {
+        key,
+        direction: "asc"
+      };
+
     });
   };
 
-  // 📄 PAGINATION
-  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+  // PAGINATION
+  const totalPages = Math.max(
+    1,
+    Math.ceil(
+      sortedData.length / itemsPerPage
+    )
+  );
 
   const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return sortedData.slice(start, start + itemsPerPage);
-  }, [currentPage, sortedData, itemsPerPage]);
 
-  // 🔢 Pagination numbers
-  const pages = [...Array(totalPages).keys()].map((n) => n + 1);
+    const start =
+      (currentPage - 1) * itemsPerPage;
+
+    return sortedData.slice(
+      start,
+      start + itemsPerPage
+    );
+
+  }, [
+    currentPage,
+    sortedData,
+    itemsPerPage
+  ]);
+
+  const pages =
+    [...Array(totalPages).keys()]
+      .map((n) => n + 1);
 
   return (
-    <div>
-      {/* SEARCH */}
-        <div className="mb-3">
-          <div className="input-group">
-            <span className="input-group-text"
-            style={{width:40}}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="search-icon"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d={ICON_PATHS.SEARCH}
-                />
-              </svg>
-            </span>
-            <input
-              className="form-control"
-              placeholder="Search..."
+      <CCardBody>
+
+        {/* SEARCH */}
+        <div className="mb-4">
+
+          <CInputGroup>
+
+            <CInputGroupText>
+              <i className="bi bi-search"></i>
+            </CInputGroupText>
+
+            <CFormInput
+              placeholder="Rechercher..."
               value={search}
               onChange={(e) => {
+
                 setSearch(e.target.value);
+
                 setCurrentPage(1);
+
               }}
             />
-          </div>
+
+          </CInputGroup>
+
         </div>
 
-      {/* TABLE */}
-      <div className="table-responsive">
-        <table className="table align-middle table-custom small">
-          <thead className="thead-custom">
-            <tr>
+        {/* TABLE */}
+        <CTable
+          hover
+          responsive
+          align="middle"
+          className="mb-0 border"
+        >
+
+          {/* HEADER */}
+          <CTableHead
+            color="light"
+            className="text-nowrap">
+            <CTableRow>
               {columns.map((col, i) => (
-                <th
-                  key={i}
-                    style={{
-                      cursor: "pointer",
-                      textAlign: i === columns.length - 1 ? "right" : "left",
-                    }}
-                  onClick={() => handleSort(col.accessor)}
-                >
-                  {col.header}{" "}
-                  {sortConfig?.key === col.accessor &&
-                    (sortConfig.direction === "asc" ? "↑" : "↓")}
-                </th>
+                <CTableHeaderCell
+                  key={col.accessor || i}
+                  onClick={() =>
+                    handleSort(col.accessor)
+                  }>
+                  <div
+                    className={`d-flex align-items-center gap-2 ${
+                      i === columns.length - 1
+                        ? "justify-content-end"
+                        : "justify-content-start"
+                    }`}>
+                    {col.header}
+                    {sortConfig?.key === col.accessor && (
+
+                      <CBadge color="secondary">
+                        {sortConfig.direction === "asc"
+                          ? "↑"
+                          : "↓"}
+                      </CBadge>
+                    )}
+                  </div>
+                </CTableHeaderCell>
               ))}
-            </tr>
-          </thead>
+            </CTableRow>
+          </CTableHead>
 
-          <tbody>
-            {paginatedData.map((row, i) => (
-              <tr key={i}>
-                {columns.map((col, j) => (
-                  <td key={j}
-                   >
+          {/* BODY */}
+          <CTableBody>
 
-                    {col.render ? col.render(row) : row[col.accessor]}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            {paginatedData.length > 0 ? (
 
-      {/* 📄 PAGINATION */}
-      <div className="d-flex justify-content-end mt-3">
-        <ul className="pagination">
-          <li className={`page-item ${currentPage === 1 && "disabled"}`}>
-            <button
-              className="page-link"
-              onClick={() => setCurrentPage(currentPage - 1)}
+              paginatedData.map((row, i) => (
+
+                <CTableRow
+                  key={row.id || i}>
+
+                  {columns.map((col, j) => (
+
+                    <CTableDataCell
+                      key={col.accessor || j}>
+                      {col.render
+                        ? col.render(row)
+                        : row[col.accessor] ?? "-"}
+
+                    </CTableDataCell>
+                  ))}
+                </CTableRow>
+              ))
+              ) : (
+
+              <CTableRow>
+                <CTableDataCell
+                  colSpan={columns.length}
+                  className="text-center py-5">
+                  Aucun résultat
+                </CTableDataCell>
+              </CTableRow>
+            )}
+          </CTableBody>
+        </CTable>
+
+        {/* PAGINATION */}
+        <div className="d-flex justify-content-end mt-4">
+
+          <CPagination align="end">
+            {/* PREVIOUS */}
+            <CPaginationItem
+              disabled={currentPage === 1}
+              onClick={() =>
+                setCurrentPage((prev) =>
+                  Math.max(prev - 1, 1)
+                )
+              }
             >
               ‹
-            </button>
-          </li>
+            </CPaginationItem>
 
-          {pages.map((p) => (
-            <li
-              key={p}
-              className={`page-item ${currentPage === p ? "active" : ""}`}
-            >
-              <button className="page-link" onClick={() => setCurrentPage(p)}>
+            {/* PAGES */}
+            {pages.map((p) => (
+
+              <CPaginationItem
+                key={p}
+                active={currentPage === p}
+                onClick={() =>
+                  setCurrentPage(p)
+                }
+              >
                 {p}
-              </button>
-            </li>
-          ))}
+              </CPaginationItem>
 
-          <li
-            className={`page-item ${
-              currentPage === totalPages && "disabled"
-            }`}
-          >
-            <button
-              className="page-link"
-              onClick={() => setCurrentPage(currentPage + 1)}
+            ))}
+
+            {/* NEXT */}
+            <CPaginationItem
+              disabled={
+                currentPage === totalPages
+              }
+              onClick={() =>
+                setCurrentPage((prev) =>
+                  Math.min(
+                    prev + 1,
+                    totalPages
+                  )
+                )
+              }
             >
               ›
-            </button>
-          </li>
-        </ul>
-      </div>
-    </div>
+            </CPaginationItem>
+
+          </CPagination>
+
+        </div>
+
+      </CCardBody>
   );
 };
 

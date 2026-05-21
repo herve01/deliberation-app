@@ -1,10 +1,10 @@
 package com.deliberation.controller.deliberation;
 
 import com.deliberation.dto.deliberation.MentionJuryMembreDetailDTO;
-import com.deliberation.model.deliberation.JuryMembre;
+import com.deliberation.model.deliberation.Personnel;
 import com.deliberation.model.deliberation.MentionJuryMembreDetail;
 import com.deliberation.model.inscription.AnneeAcademique;
-import com.deliberation.service.deliberation.JuryMembreService;
+import com.deliberation.service.deliberation.PersonnelService;
 import com.deliberation.service.deliberation.MentionJuryMembreDetailService;
 import com.deliberation.service.inscription.AnneeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,18 +23,18 @@ import java.util.List;
 public class MentionJuryMembreDetailController {
 
     private final MentionJuryMembreDetailService service;
-    private final JuryMembreService juryMembreService;
+    private final PersonnelService personnelService;
     private final AnneeService anneeService;
 
     private static final Logger logger = LoggerFactory.getLogger(MentionJuryMembreDetailController.class);
 
     public MentionJuryMembreDetailController(
             MentionJuryMembreDetailService service,
-            JuryMembreService juryMembreService,
+            PersonnelService personnelService,
             AnneeService anneeService
     ) {
         this.service = service;
-        this.juryMembreService = juryMembreService;
+        this.personnelService = personnelService;
         this.anneeService = anneeService;
     }
 
@@ -86,7 +86,7 @@ public class MentionJuryMembreDetailController {
 
         logger.info("[MentionJuryMembreDetailController] POST /api/mention_jury_membre_details - Création");
 
-        JuryMembre jury = juryMembreService.get(dto.juryId)
+        Personnel jury = personnelService.get(dto.personnelId)
                 .orElseThrow(() -> new IllegalArgumentException("Jury introuvable"));
 
         AnneeAcademique annee = anneeService.get(dto.anneeId)
@@ -123,11 +123,11 @@ public class MentionJuryMembreDetailController {
         return service.get(id)
                 .map(existing -> {
 
-                    JuryMembre jury = null;
-                    if (dto.juryId != null) {
-                        jury = juryMembreService.get(dto.juryId)
+                    Personnel personnel = null;
+                    if (dto.personnelId != null) {
+                        personnel = personnelService.get(dto.personnelId)
                                 .orElseThrow(() -> new IllegalArgumentException("Jury introuvable"));
-                        existing.setJury(jury);
+                        existing.setPersonnel(personnel);
                     }
 
                     AnneeAcademique annee = null;
@@ -137,7 +137,7 @@ public class MentionJuryMembreDetailController {
                         existing.setAnnee(annee);
                     }
 
-                    existing.fromDTO(dto, jury, annee);
+                    existing.fromDTO(dto, null, null);
 
                     MentionJuryMembreDetail updated = service.update(id, existing);
 

@@ -17,6 +17,11 @@ import java.util.UUID;
 @Entity
 //@Table(name = "etudiant")
 public class NoteMentionDetail extends ModelBase {
+
+    @ManyToOne
+    @JoinColumn(name = "note_id")
+    private NoteMention noteMention;
+
     @ManyToOne
     @JoinColumn(name = "inscription_id")
     private Inscription inscription;
@@ -25,6 +30,7 @@ public class NoteMentionDetail extends ModelBase {
     @JoinColumn(name = "ecue_id")
     private MentionEcueDetail ecue;
 
+    private Float noteAnnuelle;
     private Float note;
     private Float credit;
     private Boolean estTransfere;
@@ -53,6 +59,14 @@ public class NoteMentionDetail extends ModelBase {
         this.note = note;
     }
 
+    public Float getNoteAnnuelle() {
+        return noteAnnuelle;
+    }
+
+    public void setNoteAnnuelle(Float noteAnnuelle) {
+        this.noteAnnuelle = noteAnnuelle;
+    }
+
     public Float getCredit() {
         return credit;
     }
@@ -69,20 +83,32 @@ public class NoteMentionDetail extends ModelBase {
         this.estTransfere = estTransfere;
     }
 
+    public NoteMention getNoteMention() {
+        return noteMention;
+    }
+
+    public void setNoteMention(NoteMention noteMention) {
+        this.noteMention = noteMention;
+    }
+
     /*****
      *
      * @param dto
      * @param inscription
      * @param ecue note_mention_detail
      */
-    public void fromDTO(NoteMentionDetailDTO dto, Inscription inscription, MentionEcueDetail ecue)
+    public void fromDTO(NoteMentionDetailDTO dto, NoteMention noteMention, Inscription inscription, MentionEcueDetail ecue)
     {
         if (dto == null) return;
 
         setId(dto.id);
         setNote(dto.note);
         setCredit(dto.credit);
+        setNoteAnnuelle(dto.noteAnnuelle);
         setEstTransfere(dto.estTransfere);
+
+        if(noteMention != null)
+            setNoteMention(noteMention);
 
         if(inscription != null)
             setInscription(inscription);

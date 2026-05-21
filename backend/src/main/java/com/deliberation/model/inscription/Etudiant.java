@@ -1,13 +1,11 @@
 package com.deliberation.model.inscription;
 
-import com.deliberation.dto.deliberation.JuryMembreDTO;
 import com.deliberation.dto.inscription.EtudiantDTO;
 import com.deliberation.model.ModelBase;
 import com.deliberation.model.setting.Pays;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Entity
 public class Etudiant extends ModelBase {

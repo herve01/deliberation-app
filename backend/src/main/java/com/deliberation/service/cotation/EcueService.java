@@ -20,7 +20,7 @@ public class EcueService implements IService<Ecue, String> {
 
     @Override
     public Ecue create(Ecue instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 

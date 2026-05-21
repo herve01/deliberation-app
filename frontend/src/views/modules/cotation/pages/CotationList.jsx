@@ -1,0 +1,487 @@
+import React, { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+
+import {
+  CCard, CRow, CCol, CCardBody, CCardHeader,
+  CButton, CSpinner, CAlert, CBadge,
+  CFormSelect, CInputGroup, CInputGroupText,
+  CListGroup, CListGroupItem, CFormInput,
+  CTable, CTableHead, CTableBody, CTableRow,
+  CTableHeaderCell, CTableDataCell
+} from "@coreui/react";
+
+import {
+  cilPencil,
+  cilCalendar,
+  cilLibrary,
+  cilEducation,
+  cilSearch
+} from "@coreui/icons";
+
+import CIcon from "@coreui/icons-react";
+
+import domaineService from "@src/infrastructure/services/inscription/domaineService";
+import filiereService from "@src/infrastructure/services/inscription/filiereService";
+import mentionService from "@src/infrastructure/services/inscription/mentionService";
+import anneeService from "@src/infrastructure/services/inscription/anneeService";
+import sessionService from "@src/infrastructure/services/cotation/sessionService";
+import mentionEcueDetailService from "@src/infrastructure/services/cotation/mentionEcueDetailService";
+import inscriptionService from "@src/infrastructure/services/inscription/inscriptionService";
+
+import EditNoteModal from "@src/views/modules/shared/components/EditNoteModal";
+
+const STORAGE = {
+  anneeId: "anneeIdStored",
+  domaineId: "domaineIdStored",
+  filiereId: "filiereIdStored",
+  mentionId: "mentionIdStored",
+  session: "sessionStored",
+  mentionFullName: "mentionFullNameStored",
+};
+
+export default function CotationList() {
+
+  const location = useLocation();
+
+  // ================= STATE =================
+  const [ecues, setEcues] = useState([]);
+  const [inscriptions, setInscriptions] = useState([]);
+
+  const [domaines, setDomaines] = useState([]);
+  const [filieres, setFilieres] = useState([]);
+  const [mentions, setMentions] = useState([]);
+  const [annees, setAnnees] = useState([]);
+  const [sessions, setSessions] = useState([]);
+
+  const [selectedMention, setSelectedMention] = useState(null);
+  const [selectedSession, setSelectedSession] = useState(
+    JSON.parse(localStorage.getItem(STORAGE.session) || "null")
+  );
+
+  const [selectedEcue, setSelectedEcue] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [search, setSearch] = useState("");
+  const [visible, setVisible] = useState(false);
+
+  const [incrementor, setIncrementor] = useState(0);
+
+  const [param, setParam] = useState({
+    anneeId: localStorage.getItem(STORAGE.anneeId) || "",
+    domaineId: localStorage.getItem(STORAGE.domaineId) || "",
+    filiereId: localStorage.getItem(STORAGE.filiereId) || "",
+    mentionId: localStorage.getItem(STORAGE.mentionId) || "",
+    mentionFullName: localStorage.getItem(STORAGE.mentionFullName) || "",
+  });
+
+  // ================= LOCAL STORAGE =================
+  useEffect(() => {
+    localStorage.setItem(STORAGE.anneeId, param.anneeId || "");
+    localStorage.setItem(STORAGE.domaineId, param.domaineId || "");
+    localStorage.setItem(STORAGE.filiereId, param.filiereId || "");
+    localStorage.setItem(STORAGE.mentionId, param.mentionId || "");
+    localStorage.setItem(STORAGE.mentionFullName, param.mentionFullName || "");
+
+    localStorage.setItem(
+      STORAGE.session,
+      selectedSession ? JSON.stringify(selectedSession) : ""
+    );
+  }, [param, selectedSession]);
+
+  // ================= INIT =================
+  useEffect(() => {
+    async function load() {
+      try {
+        setLoading(true);
+
+        const [d, a] = await Promise.all([
+          domaineService.getAll(),
+          anneeService.getAll(),
+        ]);
+
+        setDomaines(d || []);
+        setAnnees(a || []);
+      } catch {
+        setError("Erreur chargement données");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, [location.state]);
+
+  // ================= FILIERES =================
+  useEffect(() => {
+    if (!param.domaineId) return setFilieres([]);
+
+    filiereService
+      .getAllByDomaine(param.domaineId)
+      .then(setFilieres)
+      .catch(() => setFilieres([]));
+  }, [param.domaineId]);
+
+  // ================= MENTIONS =================
+  useEffect(() => {
+    if (!param.filiereId) return setMentions([]);
+
+    mentionService
+      .getAllByFiliere(param.filiereId)
+      .then(setMentions)
+      .catch(() => setMentions([]));
+  }, [param.filiereId]);
+
+  // ================= SELECT MENTION =================
+  useEffect(() => {
+    const found = mentions.find(m => String(m.id) === String(param.mentionId));
+
+    if (found) {
+      setSelectedMention(found);
+      setIncrementor(found.numeroSemestreIncementor || 0);
+
+      setParam(prev => ({
+        ...prev,
+        mentionFullName: [found?.niveau?.intitule, found?.intitule]
+          .filter(Boolean)
+          .join(" ")
+      }));
+    }
+  }, [mentions, param.mentionId]);
+
+  // ================= SESSIONS =================
+  useEffect(() => {
+    if (incrementor < 0) return setSessions([]);
+
+    sessionService
+      .getAllByMentionIncrementor(incrementor)
+      .then(setSessions)
+      .catch(() => setSessions([]));
+  }, [incrementor]);
+
+  // ================= ECUES =================
+  useEffect(() => {
+    if (!param.mentionId || !param.anneeId || !selectedSession?.semestre?.id) {
+      setEcues([]);
+      return;
+    }
+
+    let active = true;
+
+    (async () => {
+      try {
+        const data =
+          await mentionEcueDetailService.getAllByMentionSemestreAnnee(
+            param.mentionId,
+            selectedSession.semestre.id,
+            param.anneeId
+          );
+
+        if (active) setEcues(data || []);
+      } catch {
+        if (active) setEcues([]);
+      }
+    })();
+
+    return () => { active = false; };
+  }, [param.mentionId, param.anneeId, selectedSession?.semestre?.id]);
+
+  // ================= INSCRIPTIONS =================
+  useEffect(() => {
+    if (!param.anneeId || !param.mentionId) return setInscriptions([]);
+
+    inscriptionService
+      .getAllByAnneeMention(param.anneeId, param.mentionId)
+      .then(setInscriptions)
+      .catch(() => setInscriptions([]));
+  }, [param.anneeId, param.mentionId]);
+
+  // ================= HELPERS =================
+  const normalize = (t) =>
+    String(t || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+  const filteredData = useMemo(() => {
+    const s = normalize(search);
+
+    return ecues.filter(r =>
+      normalize(`${r.ecueName} ${r?.ecue?.ue?.intitule}`)
+        .includes(s)
+    );
+  }, [search, ecues]);
+
+  const groupedSessions = useMemo(() => {
+    return (sessions || []).reduce((acc, item) => {
+      const key = item?.semestre?.semestreName || "Autres";
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(item);
+      return acc;
+    }, {});
+  }, [sessions]);
+
+  // ================= ACTIONS =================
+  const handleChange = (f) => (e) => {
+    const v = e.target.value;
+
+    setParam(p => ({
+      ...p,
+      [f]: v,
+      ...(f === "domaineId" && { filiereId: "", mentionId: "" }),
+      ...(f === "filiereId" && { mentionId: "" }),
+    }));
+  };
+
+  const handleSelectMention = (m) => {
+    setSelectedMention(m);
+
+    setParam(p => ({
+      ...p,
+      mentionId: m.id,
+      mentionFullName: [m?.niveau?.intitule, m?.intitule]
+        .filter(Boolean)
+        .join(" ")
+    }));
+  };
+
+  const handleSelectSession = (s) => setSelectedSession(s);
+
+  const handleEdit = (row) => {
+    setSelectedEcue(row);
+    setVisible(true);
+  };
+
+  // ================= RENDER =================
+  return (
+    <div className="container-fluid px-2 px-md-2">
+      <CCard className="shadow-sm">
+
+        {/* HEADER */}
+        <CCardHeader className="bg-light py-3 px-4">
+          <div className="d-flex justify-content-between">
+            <div>
+              <h4 className="fw-bold mb-1">Liste des ecues</h4>
+              <div className="text-medium-emphasis">
+                Gestion académique des ecues
+              </div>
+            </div>
+
+            <div>{param.mentionFullName}</div>
+          </div>
+        </CCardHeader>
+
+        <CCardBody>
+
+        {/* FILTERS */}
+        <CRow className="bg-light border rounded p-2 mb-2 g-1"
+        >
+          {[
+            {
+              label: "Année",
+              icon: cilCalendar,
+              value: param.anneeId,
+              onChange: handleChange("anneeId"),
+              options: annees,
+              getLabel: (a) => a.annee,
+              getValue: (a) => a.id,
+            },
+            {
+              label: "Domaine",
+              icon: cilLibrary,
+              value: param.domaineId,
+              onChange: handleChange("domaineId"),
+              options: domaines,
+              getLabel: (d) => d.intitule,
+              getValue: (d) => d.id,
+            },
+            {
+              label: "Filière",
+              icon: cilEducation,
+              value: param.filiereId,
+              onChange: handleChange("filiereId"),
+              options: filieres,
+              getLabel: (f) => f.intitule,
+              getValue: (f) => f.id,
+            },
+          ].map((field) => (
+            <CCol key={field.label} xs={12} sm={6} md={4}>
+              <CInputGroup>
+                <CInputGroupText>
+                  <CIcon icon={field.icon} />
+                </CInputGroupText>
+
+                <CFormSelect value={field.value} onChange={field.onChange}>
+                  <option value="">{field.label}</option>
+
+                  {field.options?.map((opt) => (
+                    <option key={field.getValue(opt)} value={field.getValue(opt)}>
+                      {field.getLabel(opt)}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </CInputGroup>
+            </CCol>
+          ))}
+
+        </CRow>
+
+          <CRow className="g-4">
+
+            {/* SIDEBAR */}
+            <CCol lg={3}>
+              <CCard className="bg-light">
+                <CCardBody>
+
+                  {/* SESSIONS */}
+                  <div className="mb-2">
+                    <div className="fw-bold mb-1">Période</div>
+
+                    {Object.entries(groupedSessions).map(([semestre, list]) => (
+                      <div key={semestre} className="mb-1">
+
+                        <div className="d-flex align-items-center justify-content-between border rounded px-3 py-1 mb-1">
+                          <div className="fw-bold text-primary">{semestre}</div>
+                          <CBadge
+                            color="primary"
+                            shape="rounded-pill"
+                          >{list.length}</CBadge>
+                        </div>
+
+                        <CListGroup>
+                          {list.map(item => (
+                            <CListGroupItem
+                              key={item.id}
+                              active={selectedSession?.id === item.id}
+                              onClick={() => handleSelectSession(item)}
+                              className="mb-1 py-1"
+                              style={{ cursor: "hand" }}
+                            >
+                              {item.sessionName}
+                            </CListGroupItem>
+                          ))}
+                        </CListGroup>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* MENTIONS */}
+                  <div>
+                    <div className="fw-bold mb-2">Mentions</div>
+
+                    <CListGroup>
+                      {mentions.map(m => (
+                        <CListGroupItem
+                          key={m.id}
+                          active={selectedMention?.id === m.id}
+                          onClick={() => handleSelectMention(m)}
+                          style={{ cursor: "hand" }}
+                          className="mb-1 py-1"
+                        >
+                          {m?.niveau?.intitule} {m?.intitule}
+                        </CListGroupItem>
+                      ))}
+                    </CListGroup>
+                  </div>
+
+                </CCardBody>
+              </CCard>
+            </CCol>
+
+            {/* CONTENT */}
+            <CCol lg={9}>
+              <CCard>
+                <CCardBody>
+
+                  {/* SEARCH */}
+                  <div className="d-flex justify-content-between mb-3">
+                    <div className="justify-content-center">{filteredData.length} élément(s)</div>
+
+                    <CInputGroup style={{ maxWidth: 350 }}>
+                      <CInputGroupText><CIcon icon={cilSearch} /></CInputGroupText>
+                      <CFormInput placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                    </CInputGroup>
+                  </div>
+
+            {/* TABLE */}
+                  {loading ? (
+                    <div className="text-center py-3">
+                      <CSpinner color="primary" />
+                    </div>
+
+                  ) : error ? (
+                    <CAlert color="danger">
+                      {error}
+                    </CAlert>
+
+                  ) : filteredData.length ===
+                    0 ? (
+                    <CAlert color="warning">
+                      Aucun élement consecutif
+                    </CAlert>
+
+                  ) : (
+                    <CTable hover className="align-middle mb-0 border">
+                      <CTableHead className="table-light">
+                        <CTableRow>
+                          <CTableHeaderCell>ECUE</CTableHeaderCell>
+                          <CTableHeaderCell>Crédit</CTableHeaderCell>
+                          <CTableHeaderCell>État</CTableHeaderCell>
+                          <CTableHeaderCell className="text-end">Actions</CTableHeaderCell>
+                        </CTableRow>
+                      </CTableHead>
+
+                      <CTableBody>
+                        {filteredData.map((row, i) => (
+                          <CTableRow className="py-0" key={row.id || i}>
+                            <CTableDataCell className="py-0">
+                              <div className="fw-semibold">{row.ecueName}</div>
+                              <small className="text-muted">{row?.ecue?.ue?.intitule}</small>
+                            </CTableDataCell>
+
+                            <CTableDataCell>
+                              <CBadge color="success">{row.credit}</CBadge>
+                            </CTableDataCell>
+
+                            <CTableDataCell>
+                              <CBadge color="info">{row.etat || "N/A"}</CBadge>
+                            </CTableDataCell>
+
+                            <CTableDataCell className="text-end">
+                               <div className="d-flex justify-content-end">
+                                   <CButton
+                                     color="light"
+                                     size="sm"
+                                     onClick={() => handleEdit(row)}
+                                     >
+                                     <CIcon icon={cilPencil} />
+                                   </CButton>
+                               </div>
+                            </CTableDataCell>
+                          </CTableRow>
+                        ))}
+                      </CTableBody>
+                    </CTable>
+                  )}
+
+                </CCardBody>
+              </CCard>
+            </CCol>
+
+          </CRow>
+        </CCardBody>
+      </CCard>
+
+      {selectedEcue && (
+        <EditNoteModal
+          visible={visible}
+          setVisible={setVisible}
+          session={selectedSession}
+          row={selectedEcue}
+          inscriptions={inscriptions}
+        />
+      )}
+    </div>
+  );
+}

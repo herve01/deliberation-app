@@ -27,23 +27,46 @@ public class InscriptionService implements IService<Inscription, String> {
 
     @Override
     public Inscription create(Inscription instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
+    }
+
+
+    @Transactional
+    public List<Inscription> createAll(List<Inscription> instances) {
+
+        instances.forEach(instance -> {
+            // Préparer étudiant
+            Etudiant etudiant = instance.getEtudiant();
+
+            etudiant.setId(UUID.randomUUID().toString().replace("-", ""));
+            etudiant.setCreatedAt(LocalDateTime.now());
+            Etudiant savedEtudiant = etudiantRepository.save(etudiant);
+
+            // Préparer inscription
+            instance.setId(UUID.randomUUID().toString().replace("-", ""));
+            instance.setCreatedAt(LocalDateTime.now());
+            instance.setDate(LocalDateTime.now());
+            instance.setEtudiant(savedEtudiant);
+        });
+
+        // Sauvegarder toutes les inscriptions
+        return repository.saveAll(instances);
     }
 
     @Transactional
     public Inscription create(Etudiant etudiant, Inscription inscription) {
 
         // 1. créer étudiant
-        etudiant.setId(UUID.randomUUID().toString());
+        etudiant.setId(UUID.randomUUID().toString().replace("-", ""));
         etudiant.setCreatedAt(LocalDateTime.now());
 
         Etudiant savedEtudiant = etudiantRepository.save(etudiant);
 
         // 2. créer inscription
-        inscription.setId(UUID.randomUUID().toString());
+        inscription.setId(UUID.randomUUID().toString().replace("-", ""));
         inscription.setEtudiant(savedEtudiant);
-        inscription.setDate(inscription.getDate());
+        inscription.setDate(LocalDateTime.now());
 
         return repository.save(inscription);
     }
@@ -95,6 +118,7 @@ public class InscriptionService implements IService<Inscription, String> {
     public List<Inscription> getAll() {
         return repository.findAll();
     }
+
 
     public List<Inscription> getAll(String id, TypeMotif type) {
         if( type == TypeMotif.ETUDIANT)

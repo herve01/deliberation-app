@@ -10,9 +10,20 @@ import java.util.List;
 @Repository
 public interface NoteMentionDetailRepository extends JpaRepository<NoteMentionDetail, String> {
 
-    List<NoteMentionDetail> findByInscriptionId(String inscriptionId);
+    List<NoteMentionDetail> findByInscription_Id(String inscriptionId);
 
-    List<NoteMentionDetail> findByEcueId(String ecueId);
+    List<NoteMentionDetail> findByEcue_Id(String ecueId);
 
-    List<NoteMentionDetail> findByInscriptionIdAndEcueId(String inscriptionId, String ecueId);
+    List<NoteMentionDetail> findByNoteMention_IdAndInscription_IdAndEcue_Id(
+            String noteMentionId,
+            String inscriptionId,
+            String ecueId
+    );
+
+    List<NoteMentionDetail> findByNoteMention_IdAndInscription_Id(
+            String noteMentionId,
+            String inscriptionId
+    );
+
+    List<NoteMentionDetail> findByNoteMention_Id(String noteMentionId);
 }

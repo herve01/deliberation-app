@@ -14,5 +14,5 @@ public interface MentionEcueDetailRepository extends JpaRepository<MentionEcueDe
 
     List<MentionEcueDetail> findBySemestreId(String semestreId);
 
-    List<MentionEcueDetail> findByMentionIdAndSemestreId(String mentionId, String semestreId);
+    List<MentionEcueDetail> findByMentionIdAndSemestreIdAndAnneeId(String mentionId, String semestreId, String anneeId);
 }

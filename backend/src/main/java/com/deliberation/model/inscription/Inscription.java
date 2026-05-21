@@ -1,14 +1,10 @@
 package com.deliberation.model.inscription;
 
-import com.deliberation.dto.deliberation.MentionJuryMembreDetailDTO;
 import com.deliberation.dto.inscription.InscriptionDTO;
 import com.deliberation.model.ModelBase;
-import com.deliberation.model.deliberation.JuryMembre;
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 //@Table(name = "inscription")
@@ -32,6 +28,8 @@ public class Inscription extends ModelBase {
     @Basic(fetch = FetchType.LAZY)
     @Column(name = "photo", columnDefinition = "TEXT", nullable = true)
     private String photo;
+
+    private LocalDateTime date;
 
     public Etudiant getEtudiant() {
         return etudiant;
@@ -72,8 +70,6 @@ public class Inscription extends ModelBase {
     public void setPhoto(String photo) {
         this.photo = photo;
     }
-
-    private LocalDateTime date;
 
     public LocalDateTime getDate() {
         return date;

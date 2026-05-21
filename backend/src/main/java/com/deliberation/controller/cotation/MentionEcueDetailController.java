@@ -4,10 +4,12 @@ import com.deliberation.dto.cotation.MentionEcueDetailDTO;
 import com.deliberation.model.cotation.MentionEcueDetail;
 import com.deliberation.model.cotation.Ecue;
 import com.deliberation.model.cotation.Semestre;
+import com.deliberation.model.inscription.AnneeAcademique;
 import com.deliberation.model.inscription.Mention;
 import com.deliberation.service.cotation.MentionEcueDetailService;
 import com.deliberation.service.cotation.EcueService;
 import com.deliberation.service.cotation.SemestreService;
+import com.deliberation.service.inscription.AnneeService;
 import com.deliberation.service.inscription.MentionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,6 +30,7 @@ public class MentionEcueDetailController {
     private final MentionService mentionService;
     private final EcueService ecueService;
     private final SemestreService semestreService;
+    private final AnneeService anneeService;
 
     private static final Logger logger = LoggerFactory.getLogger(MentionEcueDetailController.class);
 
@@ -35,12 +38,13 @@ public class MentionEcueDetailController {
             MentionEcueDetailService service,
             MentionService mentionService,
             EcueService ecueService,
-            SemestreService semestreService
+            SemestreService semestreService, AnneeService anneeService
     ) {
         this.service = service;
         this.mentionService = mentionService;
         this.ecueService = ecueService;
         this.semestreService = semestreService;
+        this.anneeService = anneeService;
     }
 
     @GetMapping
@@ -52,6 +56,17 @@ public class MentionEcueDetailController {
     public List<MentionEcueDetail> all() {
         logger.info("[MentionEcueDetailController] GET /api/mention_ecue_details - Récupération");
         return service.getAll();
+    }
+
+    @GetMapping("/mention/{mentionId}/semestre/{semestreId}/annee/{anneeId}")
+    @Operation(
+            summary = "Lister les détails mention-ECUE",
+            description = "Retourne la liste complète des détails mention-ECUE"
+    )
+    @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
+    public List<MentionEcueDetail> all(@PathVariable String mentionId, @PathVariable String semestreId, @PathVariable String anneeId) {
+        logger.info("[MentionEcueDetailController] GET /api/mention_ecue_details - Récupération");
+        return service.getAll(mentionId, semestreId, anneeId);
     }
 
     @GetMapping("/{id}")
@@ -100,8 +115,11 @@ public class MentionEcueDetailController {
         Semestre semestre = semestreService.get(dto.semestreId)
                 .orElseThrow(() -> new IllegalArgumentException("Semestre introuvable"));
 
+        AnneeAcademique annee = anneeService.get(dto.anneeId)
+                .orElseThrow(() -> new IllegalArgumentException("Année academique introuvable"));
+
         MentionEcueDetail instance = new MentionEcueDetail();
-        instance.fromDTO(dto, mention, ecue, semestre);
+        instance.fromDTO(dto, mention, ecue, semestre, annee);
 
         MentionEcueDetail created = service.create(instance);
 
@@ -152,7 +170,14 @@ public class MentionEcueDetailController {
                         existing.setSemestre(semestre);
                     }
 
-                    existing.fromDTO(dto, null, null, null);
+                    AnneeAcademique annee = null;
+                    if (dto.anneeId != null) {
+                        annee = anneeService.get(dto.anneeId)
+                                .orElseThrow(() -> new IllegalArgumentException("Année academique introuvable"));
+                        existing.setAnnee(annee);
+                    }
+
+                    existing.fromDTO(dto, null, null, null, null);
 
                     MentionEcueDetail updated = service.update(id, existing);
 

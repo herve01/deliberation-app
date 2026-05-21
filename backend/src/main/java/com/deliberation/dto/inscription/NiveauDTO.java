@@ -7,4 +7,6 @@ public class NiveauDTO {
     public String id;
     public String intitule;
     public Integer ordre;
+    public Boolean oldSystem;
+    public String cycleId;
 }

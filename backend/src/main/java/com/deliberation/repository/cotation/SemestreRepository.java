@@ -10,7 +10,4 @@ import java.util.List;
 @Repository
 public interface SemestreRepository extends JpaRepository<Semestre, String> {
 
-    List<Semestre> findByNiveauId(String niveauId);
-
-    List<Semestre> findByNiveauIdOrderByOrdreAsc(String niveauId);
 }

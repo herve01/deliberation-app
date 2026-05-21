@@ -8,7 +8,7 @@ import DefaultLayout from "@src/layout/DefaultLayout";
 import { useAuth } from "@src/app/context/AuthContext";
 
 // Pages
-const Login = React.lazy(() => import('./views/modules/pages/Login'))
+const Login = React.lazy(() => import('@src/views/modules/login/pages/Login'))
 
 function App() {
   const { user } = useAuth();

@@ -1,6 +1,5 @@
 package com.deliberation.repository.deliberation;
 
-import com.deliberation.model.deliberation.JuryMembre;
 import com.deliberation.model.deliberation.MentionJuryMembreDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,7 +11,7 @@ public interface MentionJuryMembreDetailRepository extends JpaRepository<Mention
 
     List<MentionJuryMembreDetail> findByAnneeId(String anneeId);
 
-    List<MentionJuryMembreDetail> findByJuryId(String juryId);
+    List<MentionJuryMembreDetail> findByPersonnelId(String personnelId);
 
     List<MentionJuryMembreDetail> findByAnneeIdAndRole(String anneeId, String role);
 }

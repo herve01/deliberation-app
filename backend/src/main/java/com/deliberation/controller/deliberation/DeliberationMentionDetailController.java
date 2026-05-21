@@ -1,9 +1,11 @@
 package com.deliberation.controller.deliberation;
 
 import com.deliberation.dto.deliberation.DeliberationMentionDetailDTO;
+import com.deliberation.model.deliberation.DeliberationMention;
 import com.deliberation.model.deliberation.DeliberationMentionDetail;
 import com.deliberation.model.inscription.Inscription;
 import com.deliberation.service.deliberation.DeliberationMentionDetailService;
+import com.deliberation.service.deliberation.DeliberationMentionService;
 import com.deliberation.service.inscription.InscriptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,15 +23,17 @@ import java.util.List;
 public class DeliberationMentionDetailController {
 
     private final DeliberationMentionDetailService service;
+    private final DeliberationMentionService deliberationService;
     private final InscriptionService inscriptionService;
 
     private static final Logger logger = LoggerFactory.getLogger(DeliberationMentionDetailController.class);
 
     public DeliberationMentionDetailController(
-            DeliberationMentionDetailService service,
+            DeliberationMentionDetailService service, DeliberationMentionService deliberationService,
             InscriptionService inscriptionService
     ) {
         this.service = service;
+        this.deliberationService = deliberationService;
         this.inscriptionService = inscriptionService;
     }
 
@@ -81,11 +85,15 @@ public class DeliberationMentionDetailController {
 
         logger.info("[DeliberationMentionDetailController] POST /api/deliberation_mention_details - Création");
 
+        DeliberationMention deliberation = deliberationService.get(dto.deliberationId)
+                .orElseThrow(() -> new IllegalArgumentException("Déliberation mention introuvable"));
+
         Inscription inscription = inscriptionService.get(dto.inscriptionId)
                 .orElseThrow(() -> new IllegalArgumentException("Inscription introuvable"));
 
+
         DeliberationMentionDetail instance = new DeliberationMentionDetail();
-        instance.fromDTO(dto, inscription);
+        instance.fromDTO(dto, deliberation, inscription);
 
         DeliberationMentionDetail created = service.create(instance);
 
@@ -115,6 +123,13 @@ public class DeliberationMentionDetailController {
         return service.get(id)
                 .map(existing -> {
 
+                    DeliberationMention deliberation = null;
+                    if (dto.deliberationId != null) {
+                        deliberation = deliberationService.get(dto.deliberationId)
+                                .orElseThrow(() -> new IllegalArgumentException("Deliberation mention introuvable"));
+                        existing.setDeliberation(deliberation);
+                    }
+
                     Inscription inscription = null;
                     if (dto.inscriptionId != null) {
                         inscription = inscriptionService.get(dto.inscriptionId)
@@ -122,7 +137,7 @@ public class DeliberationMentionDetailController {
                         existing.setInscription(inscription);
                     }
 
-                    existing.fromDTO(dto, inscription);
+                    existing.fromDTO(dto, deliberation, inscription);
 
                     DeliberationMentionDetail updated = service.update(id, existing);
 

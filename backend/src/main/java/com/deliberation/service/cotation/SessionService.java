@@ -22,7 +22,7 @@ public class SessionService implements IService<Session, String> {
 
     @Override
     public Session create(Session instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 
@@ -44,6 +44,20 @@ public class SessionService implements IService<Session, String> {
 
     @Override
     public List<Session> getAll() {
-        return repository.findAll();
+        return repository.findAllByOrderBySemestreNumeroAscNumeroAsc();
+    }
+
+    public List<Session> getAll(Integer incrementor) {
+        var data = repository.findAllByOrderBySemestreNumeroAscNumeroAsc();
+
+        if(incrementor > 0)
+            data.forEach(s -> {
+                int numeroSemestre = s.getSemestre().getNumero(); // 1,2 ou 7,8 etc.
+                int normalized = (numeroSemestre - 1) % 2;
+
+                s.getSemestre().setNumero(normalized + 1 + (incrementor * 2));
+            });
+
+        return data;
     }
 }

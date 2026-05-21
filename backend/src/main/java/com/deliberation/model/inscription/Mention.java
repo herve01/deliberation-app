@@ -3,6 +3,7 @@ package com.deliberation.model.inscription;
 import com.deliberation.dto.inscription.FiliereDTO;
 import com.deliberation.dto.inscription.MentionDTO;
 import com.deliberation.model.ModelBase;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.util.UUID;
@@ -12,8 +13,11 @@ import java.util.UUID;
 public class Mention extends ModelBase {
     private String intitule;
 
-    @Column(name = "numero_semestre")
-    private Integer numeroSemestre;
+    @Column(name = "numero_semestre_incrementor")
+    private Integer numeroSemestreIncrementor;
+
+    @Column(name = "max_jury_membre")
+    private Integer maxJuryMembre;
 
     @ManyToOne
     @JoinColumn(name = "niveau_id")
@@ -31,12 +35,12 @@ public class Mention extends ModelBase {
         this.intitule = intitule;
     }
 
-    public Integer getNumeroSemestre() {
-        return numeroSemestre;
+    public Integer getNumeroSemestreIncementor() {
+        return numeroSemestreIncrementor;
     }
 
-    public void setNumeroSemestre(Integer numeroSemestre) {
-        this.numeroSemestre = numeroSemestre;
+    public void setNumeroSemestreIncementor(Integer numeroSemestreIncrementor) {
+        this.numeroSemestreIncrementor = numeroSemestreIncrementor;
     }
 
     public Niveau getNiveau() {
@@ -55,6 +59,22 @@ public class Mention extends ModelBase {
         this.filiere = filiere;
     }
 
+    public Integer getNumeroSemestreIncrementor() {
+        return numeroSemestreIncrementor;
+    }
+
+    public void setNumeroSemestreIncrementor(Integer numeroSemestreIncrementor) {
+        this.numeroSemestreIncrementor = numeroSemestreIncrementor;
+    }
+
+    public Integer getMaxJuryMembre() {
+        return maxJuryMembre;
+    }
+
+    public void setMaxJuryMembre(Integer maxJuryMembre) {
+        this.maxJuryMembre = maxJuryMembre;
+    }
+
     /***
      *
      * @param dto
@@ -67,12 +87,26 @@ public class Mention extends ModelBase {
 
         setId(dto.id);
         setIntitule(dto.intitule);
-        setNumeroSemestre(dto.numeroSemestre);
+        setNumeroSemestreIncementor(dto.numeroSemestreIncrementor);
+        setMaxJuryMembre(dto.maxJuryMembre);
 
         if(niveau != null)
+        {
             setNiveau(niveau);
+
+            Integer semestre = niveau.getCycle().getOrdre() == 1 ? 0 :
+                                (niveau.getCycle().getOrdre() == 2 ? 1 : 2);
+
+            setNumeroSemestreIncementor(semestre);
+        }
 
         if(filiere != null)
             setFiliere(filiere);
+    }
+
+    @JsonProperty(value = "mentionName", access = JsonProperty.Access.READ_ONLY)
+    public String getMentionName()
+    {
+        return String.format("%s %s", getNiveau().getIntitule(), intitule);
     }
 }
