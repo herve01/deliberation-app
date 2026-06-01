@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-
+import React from "react";
 import {
   CRow,
   CCol,
@@ -7,394 +6,413 @@ import {
   CCardBody,
   CCardHeader,
   CBadge,
+  CProgress,
   CTable,
   CTableHead,
+  CTableBody,
   CTableRow,
   CTableHeaderCell,
-  CTableBody,
   CTableDataCell,
-  CSpinner,
-  CImage,
+  CButton,
 } from "@coreui/react";
-
-import {
-  cilPeople,
-  cilCalendar,
-  cilCalendarCheck,
-  cilSchool,
-  cilUser,
-  cilUserFemale
-} from "@coreui/icons";
 
 import CIcon from "@coreui/icons-react";
 
-import inscriptionService from "@src/infrastructure/services/inscription/inscriptionService";
-import etudiantService from "@src/infrastructure/services/inscription/etudiantService";
+import {
+  cilCheckCircle,
+  cilWarning,
+  cilXCircle,
+  cilPeople,
+  cilChart,
+  cilCloudDownload,
+  cilPrint,
+} from "@coreui/icons";
 
-const Dashboard = () => {
-  const [loading, setLoading] = useState(true);
-
-  const [stats, setStats] = useState({
-    inscriptions: 0,
-    inscriptionsToday: 0,
-    inscriptionsMonth: 0,
-    inscriptionsYear: 0,
-    etudiants: 0,
-  });
-
-  const [recentInscriptions, setRecentInscriptions] = useState([]);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-
-      const [inscriptions, etudiants] = await Promise.all([
-        inscriptionService.getAll(),
-        etudiantService.getAll(),
-      ]);
-
-      const now = new Date();
-
-      const currentDay = now.toDateString();
-      const currentMonth = now.getMonth();
-      const currentYear = now.getFullYear();
-
-      const inscriptionsToday = inscriptions.filter((i) => {
-        if (!i.createdAt) return false;
-
-        return (
-          new Date(i.createdAt).toDateString() === currentDay
-        );
-      }).length;
-
-      const inscriptionsMonth = inscriptions.filter((i) => {
-        if (!i.createdAt) return false;
-
-        const d = new Date(i.createdAt);
-
-        return (
-          d.getMonth() === currentMonth &&
-          d.getFullYear() === currentYear
-        );
-      }).length;
-
-      const inscriptionsYear = inscriptions.filter((i) => {
-        if (!i.createdAt) return false;
-
-        return (
-          new Date(i.createdAt).getFullYear() === currentYear
-        );
-      }).length;
-
-      setStats({
-        inscriptions: inscriptions.length,
-        inscriptionsToday,
-        inscriptionsMonth,
-        inscriptionsYear,
-        etudiants: etudiants.length,
-      });
-
-      const sorted = [...inscriptions].sort(
-        (a, b) =>
-          new Date(b.createdAt || 0) -
-          new Date(a.createdAt || 0)
-      );
-
-      setRecentInscriptions(sorted.slice(0, 5));
-    } catch (error) {
-      console.error(
-        "Erreur lors du chargement du dashboard :",
-        error
-      );
-    } finally {
-      setLoading(false);
-    }
+const DashboardDeliberation = () => {
+  const stats = {
+    inscrits: 365,
+    deliberes: 320,
+    restants: 45,
+    admis: 250,
+    ajournes: 58,
+    sessionSpeciale: 12,
+    tauxReussite: 78.1,
+    moyennePromo: 12.84,
   };
 
-  const formatDate = (date) => {
-    if (!date) return "-";
+  const limites = [
+    {
+      matricule: "2025001",
+      nom: "KAYEMBE Hervé",
+      moyenne: 9.98,
+    },
+    {
+      matricule: "2025012",
+      nom: "MUTOMBO Sarah",
+      moyenne: 9.85,
+    },
+    {
+      matricule: "2025045",
+      nom: "ILUNGA David",
+      moyenne: 9.72,
+    },
+  ];
 
-    return new Date(date).toLocaleDateString(
-      "fr-FR",
-      {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }
-    );
-  };
+  const ecues = [
+    {
+      ecue: "Programmation Java",
+      moyenne: 13.5,
+      taux: 85,
+    },
+    {
+      ecue: "Réseaux II",
+      moyenne: 9.8,
+      taux: 45,
+    },
+    {
+      ecue: "Base de données",
+      moyenne: 11.7,
+      taux: 71,
+    },
+  ];
 
-  const StatCard = ({
-    title,
-    value,
-    color,
-    icon,
-  }) => (
-    <CCard
-      className="border-1 shadow-sm h-100"
-      style={{
-        borderRadius: "14px",
-      }}
-    >
-      <CCardBody className="d-flex justify-content-between align-items-center">
-        <div>
-          <div className="text-medium-emphasis small mb-1">
-            {title}
+  const CardStat = ({ title, value, color, icon }) => (
+    <CCard className="border-0 shadow-sm h-100">
+      <CCardBody>
+        <div className="d-flex justify-content-between">
+          <div>
+            <div className="text-medium-emphasis">
+              {title}
+            </div>
+
+            <h2 className="fw-bold">
+              {value}
+            </h2>
           </div>
 
-          <h3 className="fw-bold mb-0">
-            {value}
-          </h3>
-        </div>
-
-        <div
-          className={`bg-${color} bg-opacity-10 d-flex align-items-center justify-content-center`}
-          style={{
-            width: 55,
-            height: 55,
-            borderRadius: "12px",
-          }}
-        >
-          <CIcon
-            icon={icon}
-            size="xl"
-            className={`text-${color}`}
-          />
+          <div>
+            <CIcon
+              icon={icon}
+              size="xl"
+              className={`text-${color}`}
+            />
+          </div>
         </div>
       </CCardBody>
     </CCard>
   );
 
-  if (loading) {
-    return (
-      <div className="text-center py-5">
-        <CSpinner color="primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="container-fluid">
 
       {/* HEADER */}
-      <div className="mb-4">
-        <h3 className="fw-bold mb-1">
-          Tableau de bord
-        </h3>
 
-        <div className="text-medium-emphasis">
-          Gestion des inscriptions académiques
-        </div>
-      </div>
+      <CCard
+        className="border-0 shadow-sm mb-4"
+        style={{
+          background:
+            "linear-gradient(135deg,#0f2027,#203a43,#2c5364)",
+          color: "#fff",
+        }}
+      >
+        <CCardBody>
 
-      {/* STATS */}
-      <CRow className="g-3 mb-4">
+          <div className="d-flex justify-content-between align-items-center flex-wrap">
 
-        <CCol xs={12} sm={6} xl={3}>
-          <StatCard
-            title="Total inscriptions"
-            value={stats.inscriptions}
+            <div>
+              <h2 className="fw-bold">
+                Dashboard Délibération
+              </h2>
+
+              <p className="mb-0">
+                Suivi global des résultats académiques
+              </p>
+            </div>
+
+            <div>
+              <CButton
+                color="light"
+                className="me-2"
+              >
+                <CIcon icon={cilPrint} />
+                {" "}PV
+              </CButton>
+
+              <CButton color="success">
+                <CIcon icon={cilCloudDownload} />
+                {" "}Excel
+              </CButton>
+            </div>
+
+          </div>
+
+        </CCardBody>
+      </CCard>
+
+      {/* KPIs */}
+
+      <CRow className="g-4 mb-4">
+
+        <CCol md={3}>
+          <CardStat
+            title="Étudiants Inscrits"
+            value={stats.inscrits}
             color="primary"
-            icon={cilSchool}
+            icon={cilPeople}
           />
         </CCol>
 
-        <CCol xs={12} sm={6} xl={3}>
-          <StatCard
-            title="Aujourd’hui"
-            value={stats.inscriptionsToday}
+        <CCol md={3}>
+          <CardStat
+            title="Délibérés"
+            value={stats.deliberes}
             color="success"
-            icon={cilCalendar}
+            icon={cilCheckCircle}
           />
         </CCol>
 
-        <CCol xs={12} sm={6} xl={3}>
-          <StatCard
-            title="Ce mois"
-            value={stats.inscriptionsMonth}
+        <CCol md={3}>
+          <CardStat
+            title="Restants"
+            value={stats.restants}
             color="warning"
-            icon={cilCalendarCheck}
+            icon={cilWarning}
           />
         </CCol>
 
-        <CCol xs={12} sm={6} xl={3}>
-          <StatCard
-            title="Cette année"
-            value={stats.inscriptionsYear}
-            color="danger"
-            icon={cilCalendar}
+        <CCol md={3}>
+          <CardStat
+            title="Taux Réussite"
+            value={`${stats.tauxReussite}%`}
+            color="info"
+            icon={cilChart}
           />
         </CCol>
 
       </CRow>
 
-      {/* ETUDIANTS */}
-      <CRow className="g-3 mb-4">
+      {/* DECISIONS */}
 
-        <CCol xs={12}>
-          <CCard
-            className="border-0 shadow-sm"
-            style={{
-              borderRadius: "14px",
-            }}
-          >
-            <CCardBody className="d-flex justify-content-between align-items-center">
-              <div>
-                <div className="text-medium-emphasis small mb-1">
-                  Étudiants
-                </div>
+      <CRow className="g-4 mb-4">
 
-                <h3 className="fw-bold mb-0">
-                  {stats.etudiants}
-                </h3>
-              </div>
+        <CCol md={4}>
+          <CCard className="border-0 shadow-sm">
+            <CCardBody className="text-center">
+              <h5>Admis</h5>
 
-              <CIcon
-                icon={cilPeople}
-                size="xxl"
-                className="text-info"
-              />
+              <h1 className="text-success fw-bold">
+                {stats.admis}
+              </h1>
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        <CCol md={4}>
+          <CCard className="border-0 shadow-sm">
+            <CCardBody className="text-center">
+              <h5>Ajournés</h5>
+
+              <h1 className="text-danger fw-bold">
+                {stats.ajournes}
+              </h1>
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        <CCol md={4}>
+          <CCard className="border-0 shadow-sm">
+            <CCardBody className="text-center">
+              <h5>Session spéciale</h5>
+
+              <h1 className="text-warning fw-bold">
+                {stats.sessionSpeciale}
+              </h1>
             </CCardBody>
           </CCard>
         </CCol>
 
       </CRow>
 
-      {/* TABLE INSCRIPTIONS */}
-      <CCard
-        className="border-0 shadow-sm"
-        style={{
-          borderRadius: "14px",
-        }}
-      >
-        <CCardHeader className="bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-          <div>
-            <h5 className="mb-0 fw-bold">
-              Inscriptions récentes
-            </h5>
+      {/* PROGRESSION */}
 
-            <small className="text-medium-emphasis">
-              Les 5 dernières inscriptions
-            </small>
-          </div>
-
-          <CBadge color="primary">
-            {recentInscriptions.length}
-          </CBadge>
+      <CCard className="border-0 shadow-sm mb-4">
+        <CCardHeader>
+          <strong>
+            Progression de la délibération
+          </strong>
         </CCardHeader>
 
-       <CCardBody>
+        <CCardBody>
 
+          <div className="mb-4">
 
-         <CTable
-           hover
-           responsive
-           align="middle"
-           className="mb-0"
-         >
-           <CTableHead color="light">
-             <CTableRow>
-               <CTableHeaderCell>
-                 Étudiant
-               </CTableHeaderCell>
-               <CTableHeaderCell>
-                 Mention
-               </CTableHeaderCell>
-               <CTableHeaderCell>
-                 Date
-               </CTableHeaderCell>
-             </CTableRow>
-           </CTableHead>
+            <div className="d-flex justify-content-between">
+              <span>Délibérations effectuées</span>
+              <strong>87%</strong>
+            </div>
 
-           <CTableBody>
+            <CProgress
+              value={87}
+              color="success"
+            />
 
-             {recentInscriptions.length > 0 ? (
-               recentInscriptions.map((i) => (
-                 <CTableRow key={i.id}>
+          </div>
 
-                   <CTableDataCell>
-                     <div className="d-flex align-items-center gap-3">
+          <div>
 
-                       {i.photo ? (
-                         <CImage
-                         className="rounded-circle object-fit-cover"
-                           src={
-                             i.photo.startsWith("data:")
-                               ? i.photo
-                               : `data:image/jpeg;base64,${i.photo}`
-                           }
-                           width={50}
-                           height={50}
-                           rounded
-                           style={{
-                             objectFit: "cover",
-                             border: "1px solid #ddd",
-                           }}
-                         />
-                       ) : (
-                         <div
-                           className="bg-light d-flex align-items-center justify-content-center rounded-circle object-fit-cover fw-bold text-uppercase"
-                           style={{
-                             width: 50,
-                             height: 50,
-                             fontSize: 14,
-                             color: "#555",
-                           }}
-                         >
-                            {`${i.etudiant?.prenom?.charAt(0) || ""}${i.etudiant?.nom?.charAt(0) || ""}`}
-                         </div>
-                       )}
+            <div className="d-flex justify-content-between">
+              <span>PV générés</span>
+              <strong>70%</strong>
+            </div>
 
-                       <div>
-                         <div className="fw-semibold">
-                           {i.etudiant?.nom || "-"}{" "}
-                           {i.etudiant?.postnom || "-"}{" "}
-                           {i.etudiant?.prenom || "-"}
-                         </div>
+            <CProgress
+              value={70}
+              color="warning"
+            />
 
-                         <small className="text-medium-emphasis">
-                           {i.etudiant?.telephone || "-"}
-                         </small>
-                       </div>
+          </div>
 
-                     </div>
-                   </CTableDataCell>
+        </CCardBody>
+      </CCard>
 
-                   <CTableDataCell>
-                     <CBadge color="info">
-                       {i.mention?.niveau?.intitule || "-"}{" "}
-                       {i.mention?.intitule || "-"}
-                     </CBadge>
-                   </CTableDataCell>
+      {/* ETUDIANTS LIMITES */}
 
-                   <CTableDataCell>
-                     {formatDate(i.createdAt)}
-                   </CTableDataCell>
+      <CCard className="border-0 shadow-sm mb-4">
 
-                 </CTableRow>
-               ))
-             ) : (
-               <CTableRow>
-                 <CTableDataCell
-                   colSpan={3}
-                   className="text-center py-4 text-medium-emphasis"
-                 >
-                   Aucune inscription trouvée
-                 </CTableDataCell>
-               </CTableRow>
-             )}
+        <CCardHeader>
+          <strong>
+            Étudiants à la limite (9.50 - 9.99)
+          </strong>
+        </CCardHeader>
 
-           </CTableBody>
-         </CTable>
-       </CCardBody>
+        <CCardBody>
+
+          <CTable hover responsive>
+
+            <CTableHead>
+              <CTableRow>
+
+                <CTableHeaderCell>
+                  Matricule
+                </CTableHeaderCell>
+
+                <CTableHeaderCell>
+                  Nom
+                </CTableHeaderCell>
+
+                <CTableHeaderCell>
+                  Moyenne
+                </CTableHeaderCell>
+
+              </CTableRow>
+            </CTableHead>
+
+            <CTableBody>
+
+              {limites.map((item, index) => (
+                <CTableRow key={index}>
+
+                  <CTableDataCell>
+                    {item.matricule}
+                  </CTableDataCell>
+
+                  <CTableDataCell>
+                    {item.nom}
+                  </CTableDataCell>
+
+                  <CTableDataCell>
+
+                    <CBadge color="warning">
+                      {item.moyenne}
+                    </CBadge>
+
+                  </CTableDataCell>
+
+                </CTableRow>
+              ))}
+
+            </CTableBody>
+
+          </CTable>
+
+        </CCardBody>
+
+      </CCard>
+
+      {/* ECUES */}
+
+      <CCard className="border-0 shadow-sm">
+
+        <CCardHeader>
+          <strong>
+            Performance des ECUE
+          </strong>
+        </CCardHeader>
+
+        <CCardBody>
+
+          <CTable hover responsive>
+
+            <CTableHead>
+              <CTableRow>
+
+                <CTableHeaderCell>
+                  ECUE
+                </CTableHeaderCell>
+
+                <CTableHeaderCell>
+                  Moyenne
+                </CTableHeaderCell>
+
+                <CTableHeaderCell>
+                  Taux réussite
+                </CTableHeaderCell>
+
+              </CTableRow>
+            </CTableHead>
+
+            <CTableBody>
+
+              {ecues.map((e, index) => (
+
+                <CTableRow key={index}>
+
+                  <CTableDataCell>
+                    {e.ecue}
+                  </CTableDataCell>
+
+                  <CTableDataCell>
+                    {e.moyenne}/20
+                  </CTableDataCell>
+
+                  <CTableDataCell>
+
+                    <CBadge
+                      color={
+                        e.taux >= 50
+                          ? "success"
+                          : "danger"
+                      }
+                    >
+                      {e.taux}%
+                    </CBadge>
+
+                  </CTableDataCell>
+
+                </CTableRow>
+
+              ))}
+
+            </CTableBody>
+
+          </CTable>
+
+        </CCardBody>
+
       </CCard>
 
     </div>
   );
 };
 
-export default Dashboard;
+export default DashboardDeliberation;

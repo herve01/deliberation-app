@@ -1,8 +1,6 @@
 package com.deliberation.service.cotation;
 
-import com.deliberation.model.cotation.Semestre;
 import com.deliberation.model.cotation.Session;
-import com.deliberation.repository.cotation.SemestreRepository;
 import com.deliberation.repository.cotation.SessionRepository;
 import com.deliberation.service.IService;
 import org.springframework.stereotype.Service;
@@ -42,13 +40,17 @@ public class SessionService implements IService<Session, String> {
         return repository.findById(id);
     }
 
+    public Optional<Session> getSessionAnnuel(String semestreId) {
+        return repository.findOneBySemestreIdAndEstAnnuelIsTrue(semestreId);
+    }
+
     @Override
     public List<Session> getAll() {
-        return repository.findAllByOrderBySemestreNumeroAscNumeroAsc();
+        return repository.findAllByOrderBySemestre_NumeroAscNumeroAsc();
     }
 
     public List<Session> getAll(Integer incrementor) {
-        var data = repository.findAllByOrderBySemestreNumeroAscNumeroAsc();
+        var data = repository.findAllByOrderBySemestre_NumeroAscNumeroAsc();
 
         if(incrementor > 0)
             data.forEach(s -> {
@@ -59,5 +61,24 @@ public class SessionService implements IService<Session, String> {
             });
 
         return data;
+    }
+
+    public List<Session> getAllWithout(Integer incrementor) {
+        var data = repository.findAllByEstAnnuelFalseOrderBySemestre_NumeroAscNumeroAsc();
+
+        if(incrementor > 0)
+            data.forEach(s -> {
+                int numeroSemestre = s.getSemestre().getNumero(); // 1,2 ou 7,8 etc.
+                int normalized = (numeroSemestre - 1) % 2;
+
+                s.getSemestre().setNumero(normalized + 1 + (incrementor * 2));
+            });
+
+        return data;
+    }
+
+    @Override
+    public Long count() {
+        return repository.count();
     }
 }

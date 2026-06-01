@@ -2,9 +2,13 @@ package com.deliberation.model.inscription;
 
 import com.deliberation.dto.inscription.InscriptionDTO;
 import com.deliberation.model.ModelBase;
+import com.deliberation.model.cotation.CotationDetail;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 //@Table(name = "inscription")

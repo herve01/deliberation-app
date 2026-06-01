@@ -119,7 +119,6 @@ public class InscriptionService implements IService<Inscription, String> {
         return repository.findAll();
     }
 
-
     public List<Inscription> getAll(String id, TypeMotif type) {
         if( type == TypeMotif.ETUDIANT)
             return repository.findAllByEtudiant_Id(id);
@@ -145,5 +144,95 @@ public class InscriptionService implements IService<Inscription, String> {
                 .findOneByEtudiant_IdAndAnnee_IdAndMention_Id(
                         etudiantId, anneeId, mentionId
                 );
+    }
+
+    public long count(String anneeId, String mentionId)
+    {
+        return  repository.countByAnneeIdAndMentionId(anneeId, mentionId);
+    }
+
+    public long count(String anneeId)
+    {
+        return  repository.countByAnneeId(anneeId);
+    }
+
+    @Override
+    public Long count() {
+        return repository.count();
+    }
+
+
+    public long countToday(String anneeId) {
+
+        LocalDateTime debut = LocalDate.now().atStartOfDay();
+
+        LocalDateTime fin = debut.plusDays(1);
+
+        return repository.countByAnneeAndDateBetween(
+                anneeId,
+                debut,
+                fin
+        );
+    }
+
+    public long countThisMonth(String anneeId) {
+
+        LocalDateTime debut = LocalDate.now()
+                .withDayOfMonth(1)
+                .atStartOfDay();
+
+        LocalDateTime fin = debut.plusMonths(1);
+
+        return repository.countByAnneeAndDateBetween(
+                anneeId,
+                debut,
+                fin
+        );
+    }
+
+    public long countPreviousMonth(String anneeId) {
+
+        LocalDateTime debut = LocalDate.now()
+                .minusMonths(1)
+                .withDayOfMonth(1)
+                .atStartOfDay();
+
+        LocalDateTime fin = debut.plusMonths(1);
+
+        return repository.countByAnneeAndDateBetween(
+                anneeId,
+                debut,
+                fin
+        );
+    }
+
+    public long countPreviousDay(String anneeId) {
+
+        LocalDateTime debut = LocalDate.now()
+                .minusDays(1)
+                .atStartOfDay();
+
+        LocalDateTime fin = debut.plusDays(1);
+
+        return repository.countByAnneeAndDateBetween(
+                anneeId,
+                debut,
+                fin
+        );
+    }
+
+    public long countPreviousYear() {
+
+        LocalDateTime debut = LocalDate.now()
+                .minusYears(1)
+                .withDayOfYear(1)
+                .atStartOfDay();
+
+        LocalDateTime fin = debut.plusYears(1);
+
+        return repository.countByDateBetween(
+                debut,
+                fin
+        );
     }
 }

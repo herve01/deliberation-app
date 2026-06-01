@@ -1,9 +1,7 @@
 package com.deliberation.model.cotation;
 
-import com.deliberation.dto.cotation.EcueDTO;
 import com.deliberation.dto.cotation.UniteEnseignementDTO;
 import com.deliberation.model.ModelBase;
-import com.deliberation.model.inscription.Niveau;
 import jakarta.persistence.*;
 
 import java.util.UUID;

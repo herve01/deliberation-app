@@ -1,7 +1,7 @@
 import React from 'react';
 
 // Lazy loading
-const DashBoard = React.lazy(() => import('@src/views/modules/inscription/pages/DashBoard'));
+const InscriptionDashBoard = React.lazy(() => import('@src/views/modules/inscription/pages/DashBoard'));
 const NiveauList = React.lazy(() => import('@src/views/modules/inscription/pages/NiveauList'));
 const DomaineList = React.lazy(() => import('@src/views/modules/inscription/pages/DomaineList'));
 const CycleList = React.lazy(() => import('@src/views/modules/inscription/pages/CycleList'));
@@ -23,18 +23,22 @@ const EditInscription = React.lazy(() => import('@src/views/modules/inscription/
 const EditUser = React.lazy(() => import('@src/views/modules/login/pages/EditUser'));
 
 const CotationList = React.lazy(() => import('@src/views/modules/cotation/pages/CotationList'));
-const DashBoard_COTATION = React.lazy(() => import('@src/views/modules/cotation/pages/DashBoard'));
+const CotationDashBoard = React.lazy(() => import('@src/views/modules/cotation/pages/DashBoard'));
 const SemestreList = React.lazy(() => import('@src/views/modules/cotation/pages/SemestreList'));
 const SessionList = React.lazy(() => import('@src/views/modules/cotation/pages/SessionList'));
 const UniteEnseignementList = React.lazy(() => import('@src/views/modules/cotation/pages/UniteEnseignementList'));
 const ElementConstitutifList = React.lazy(() => import('@src/views/modules/cotation/pages/ElementConstitutifList'));
-const MentionEcueDetailList = React.lazy(() => import('@src/views/modules/cotation/pages/MentionEcueDetailList'));
+const MentionSemestreEcueList = React.lazy(() => import('@src/views/modules/cotation/pages/MentionSemestreEcueList'));
 
 const EditSemestre = React.lazy(() => import('@src/views/modules/cotation/pages/EditSemestre'));
 const EditSession = React.lazy(() => import('@src/views/modules/cotation/pages/EditSession'));
 const EditUniteEnseignement = React.lazy(() => import('@src/views/modules/cotation/pages/EditUniteEnseignement'));
 const EditElementConstitutif = React.lazy(() => import('@src/views/modules/cotation/pages/EditElementConstitutif'));
 const EditMentionEcueDetail = React.lazy(() => import('@src/views/modules/cotation/pages/EditMentionEcueDetail'));
+
+const DeliberationList = React.lazy(() => import('@src/views/modules/deliberation/pages/DeliberationList'));
+const DeliberationMention = React.lazy(() => import('@src/views/modules/deliberation/pages/DeliberationMention'));
+const DeliberationDashBoard = React.lazy(() => import('@src/views/modules/deliberation/pages/DashBoard'));
 
 const routes = [
   { path: '/login', name: 'Home' },
@@ -44,7 +48,7 @@ const routes = [
 
   // ================= MODULE INSCRIPTION =================
 
-  { path: '/inscription/dashboard', element: <DashBoard /> },
+  { path: '/inscription/dashboard', element: <InscriptionDashBoard /> },
   { path: '/inscription/niveau', element: <NiveauList /> },
   { path: '/inscription/domaine', element: <DomaineList /> },
   { path: '/inscription/cycle', element: <CycleList /> },
@@ -68,12 +72,12 @@ const routes = [
   // ================= MODULE COTATION =================
 
   { path: '/cotation/list', element: <CotationList /> },
-  { path: '/cotation/dashboard', element: <DashBoard_COTATION /> },
+  { path: '/cotation/dashboard', element: <CotationDashBoard /> },
   { path: '/cotation/semestre', element: <SemestreList /> },
   { path: '/cotation/session', element: <SessionList /> },
   { path: '/cotation/unite-enseignement', element: <UniteEnseignementList /> },
   { path: '/cotation/element-constitutif', element: <ElementConstitutifList /> },
-  { path: '/cotation/mention-ecue-details', element: <MentionEcueDetailList /> },
+  { path: '/cotation/mention-ecue-details', element: <MentionSemestreEcueList /> },
 
   { path: '/cotation/semestre/edit', element: <EditSemestre /> },
   { path: '/cotation/session/edit', element: <EditSession /> },
@@ -81,7 +85,15 @@ const routes = [
   { path: '/cotation/element-constitutif/edit', element: <EditElementConstitutif /> },
   { path: '/cotation/mention-ecue-details/edit', element: <EditMentionEcueDetail /> },
 
-  // ================= FIN MODULE COTATION =================
+  // ===================== FIN MODULE COTATION ============================================
+
+  // ========================= MODULE DELIBERATION =========================================
+
+    { path: '/deliberation/list', element: <DeliberationList /> },
+    { path: '/deliberation/traitement', element: <DeliberationMention /> },
+    { path: '/deliberation/dashboard', element: <DeliberationDashBoard /> },
+
+    // ================= FIN MODULE DELIBERATION ===============================================
 ];
 
 export default routes;

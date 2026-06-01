@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,4 +41,33 @@ public interface InscriptionRepository extends JpaRepository<Inscription, String
             String anneeId,
             String mentionId
     );
+
+    long countByAnneeIdAndMentionId(String anneeId, String mentionId);
+
+    long countByAnneeId(String anneeId);
+
+    @Query("""
+    SELECT COUNT(i)
+    FROM Inscription i
+    WHERE i.annee.id = :anneeId
+    AND i.date >= :debut
+    AND i.date < :fin
+    """)
+    long countByAnneeAndDateBetween(
+            String anneeId,
+            LocalDateTime debut,
+            LocalDateTime fin
+    );
+
+    @Query("""
+    SELECT COUNT(i)
+    FROM Inscription i
+    WHERE i.date >= :debut
+    AND i.date < :fin
+    """)
+    long countByDateBetween(
+            LocalDateTime debut,
+            LocalDateTime fin
+    );
+
 }

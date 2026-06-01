@@ -46,4 +46,9 @@ public class DomaineService implements IService<Domaine, String> {
     public List<Domaine> getAll() {
         return repository.findAll();
     }
+
+    @Override
+    public Long count() {
+        return repository.count();
+    }
 }

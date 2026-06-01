@@ -56,61 +56,32 @@ import "@src/styles/global.css";
 export default function InscriptionList() {
 
   const navigate = useNavigate();
-
   const location = useLocation();
-
   const { showToast } = useToast();
 
-  const [inscriptions, setInscriptions] =
-    useState([]);
+  const [inscriptions, setInscriptions] = useState([]);
+  const [annees, setAnnees] = useState([]);
+  const [domaines, setDomaines] = useState([]);
+  const [filieres, setFilieres] = useState([]);
+  const [mentions, setMentions] = useState([]);
 
-  const [annees, setAnnees] =
-    useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [domaines, setDomaines] =
-    useState([]);
+  const [error, setError] = useState("");
 
-  const [filieres, setFilieres] =
-    useState([]);
-
-  const [mentions, setMentions] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState("");
-
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
   const [param, setParam] =
     useState({
-      anneeId:
-        localStorage.getItem(
-          "anneeIdStored"
-        ) || "",
+      anneeId:localStorage.getItem("anneeIdStored") || "",
 
-      domaineId:
-        localStorage.getItem(
-          "domaineIdStored"
-        ) || "",
+      domaineId:localStorage.getItem("domaineIdStored") || "",
 
-      filiereId:
-        localStorage.getItem(
-          "filiereIdStored"
-        ) || "",
+      filiereId:localStorage.getItem("filiereIdStored") || "",
 
-      mentionId:
-        localStorage.getItem(
-          "mentionIdStored"
-        ) || "",
+      mentionId:localStorage.getItem("mentionIdStored") || "",
 
-      mentionFullName:
-        localStorage.getItem(
-          "mentionFullNameStored"
-        ) || "",
+      mentionFullName:localStorage.getItem("mentionFullNameStored") || "",
     });
 
   const isValid =
@@ -122,25 +93,14 @@ export default function InscriptionList() {
   // SAVE FILTERS
   useEffect(() => {
     Object.entries({
-      anneeIdStored:
-        param.anneeId,
+      anneeIdStored:param.anneeId,
+      domaineIdStored:param.domaineId,
+      filiereIdStored:param.filiereId,
+      mentionIdStored:param.mentionId,
+      mentionFullNameStored:param.mentionFullName,
 
-      domaineIdStored:
-        param.domaineId,
-
-      filiereIdStored:
-        param.filiereId,
-
-      mentionIdStored:
-        param.mentionId,
-
-      mentionFullNameStored:
-        param.mentionFullName,
     }).forEach(([key, value]) =>
-      localStorage.setItem(
-        key,
-        value || ""
-      )
+      localStorage.setItem(key, value || "")
     );
   }, [param]);
 
@@ -150,24 +110,15 @@ export default function InscriptionList() {
       try {
         setLoading(true);
 
-        const [
-          domainesData,
-          anneesData,
-        ] = await Promise.all([
-          domaineService.getAll(),
-          anneeService.getAll(),
-        ]);
+        const [domainesData, anneesData,] = await Promise.all([
+          domaineService.getAll(), anneeService.getAll(),]);
 
         setDomaines(domainesData || []);
         setAnnees(anneesData || []);
 
       } catch (e) {
         console.error(e);
-
-        setError(
-          "Impossible de charger les inscriptions"
-        );
-
+        setError("Impossible de charger les inscriptions", "error");
       } finally {
         setLoading(false);
       }
@@ -186,11 +137,7 @@ export default function InscriptionList() {
       }
 
       try {
-        const data =
-          await filiereService.getAllByDomaine(
-            param.domaineId
-          );
-
+        const data = await filiereService.getAllByDomaine(param.domaineId);
         setFilieres(data || []);
 
       } catch (e) {
@@ -212,13 +159,8 @@ export default function InscriptionList() {
       }
 
       try {
-        const data =
-          await mentionService.getAllByFiliere(
-            param.filiereId
-          );
-
+        const data = await mentionService.getAllByFiliere(param.filiereId);
         setMentions(data || []);
-
       } catch (e) {
         console.error(e);
       }
@@ -237,32 +179,18 @@ export default function InscriptionList() {
 
       try {
 
-        if (
-          !param.anneeId ||
-          !param.mentionId
-        ) {
-
+        if (!param.anneeId || !param.mentionId) {
           if (mounted) {
             setInscriptions([]);
           }
-
           return;
         }
-
-        const data =
-          await inscriptionService.getAllByAnneeMention(
-            param.anneeId,
-            param.mentionId
-          );
-
+        const data = await inscriptionService.getAllByAnneeMention(param.anneeId,param.mentionId);
         if (mounted) {
           setInscriptions(data || []);
         }
-
       } catch (e) {
-
         console.error(e);
-
         if (mounted) {
           setInscriptions([]);
         }
@@ -275,18 +203,12 @@ export default function InscriptionList() {
       mounted = false;
     };
 
-  }, [
-    param.anneeId,
-    param.mentionId,
-  ]);
+  }, [param.anneeId, param.mentionId,]);
 
   // SELECTED MENTION
   useEffect(() => {
 
-    if (
-      !mentions.length ||
-      !param.mentionId
-    ) return;
+    if (!mentions.length || !param.mentionId) return;
 
     const found = mentions.find(
       (m) => m.id === param.mentionId
@@ -296,11 +218,7 @@ export default function InscriptionList() {
 
     setParam((prev) => ({
       ...prev,
-
-      mentionFullName: [
-        found?.niveau?.intitule,
-        found?.intitule,
-      ]
+      mentionFullName: [found?.niveau?.intitule, found?.intitule,]
         .filter(Boolean)
         .join(" "),
     }));
@@ -315,18 +233,15 @@ export default function InscriptionList() {
 
       setParam((prev) => ({
         ...prev,
-
         [field]: value,
 
-        ...(field ===
-          "domaineId" && {
+        ...(field === "domaineId" && {
           filiereId: "",
           mentionId: "",
           mentionFullName: "",
         }),
 
-        ...(field ===
-          "filiereId" && {
+        ...(field === "filiereId" && {
           mentionId: "",
           mentionFullName: "",
         }),
@@ -338,13 +253,9 @@ export default function InscriptionList() {
 
     setParam((prev) => ({
       ...prev,
-
       mentionId: item.id,
 
-      mentionFullName: [
-        item?.niveau?.intitule,
-        item?.intitule,
-      ]
+      mentionFullName: [item?.niveau?.intitule, item?.intitule,]
         .filter(Boolean)
         .join(" "),
     }));
@@ -352,9 +263,7 @@ export default function InscriptionList() {
 
   // RESET
   const handleReset = () => {
-
-    [
-      "anneeIdStored",
+    ["anneeIdStored",
       "domaineIdStored",
       "mentionIdStored",
       "filiereIdStored",
@@ -377,14 +286,10 @@ export default function InscriptionList() {
   // FILTER
   const filteredData = useMemo(() => {
 
-    const keyword =
-      search.toLowerCase().trim();
+    const keyword = search.toLowerCase().trim();
 
     return inscriptions.filter(
-      (row) =>
-        `${row?.etudiant?.nom || ""}
-         ${row?.etudiant?.postnom || ""}
-         ${row?.etudiant?.prenom || ""}`
+      (row) => `${row?.etudiant?.nom || ""} ${row?.etudiant?.postnom || ""} ${row?.etudiant?.prenom || ""}`
           .toLowerCase()
           .includes(keyword)
     );
@@ -393,9 +298,7 @@ export default function InscriptionList() {
 
   // DELETE
   async function handleDelete(id) {
-
-    if (
-      !window.confirm(
+    if (!window.confirm(
         "Voulez-vous vraiment supprimer cette inscription ?"
       )
     ) return;
@@ -404,42 +307,25 @@ export default function InscriptionList() {
 
       await inscriptionService.delete(id);
 
-      setInscriptions((prev) =>
-        prev.filter(
-          (item) => item.id !== id
-        )
-      );
+      setInscriptions((prev) => prev.filter((item) => item.id !== id));
 
-      showToast(
-        "Inscription supprimée avec succès !",
-        "success"
-      );
+      showToast("Inscription supprimée avec succès !", "success");
 
     } catch (e) {
-
       console.error(e);
-
-      showToast(
-        "Erreur lors de la suppression",
-        "error"
-      );
+      showToast("Erreur lors de la suppression", "error");
     }
   }
 
   // EDIT
   function handleEdit(inscription) {
-
-    navigate("/inscription/list/edit", {
-      state: { inscription },
-    });
+    navigate("/inscription/list/edit", {state: { inscription },});
   }
 
   // TABLE
   const columns = [
-
     {
       header: "Étudiant",
-
       accessor: "etudiant",
 
       render: (row) => (
@@ -495,17 +381,10 @@ export default function InscriptionList() {
                 ● {row?.etudiant?.sexe}
               </small>
             </div>
-
             <small className="text-medium-emphasis">
               {row?.date
-                ? new Date(
-                    row.date
-                  ).toLocaleDateString(
-                    "fr-FR"
-                  )
-                : "-"}
+                ? new Date(row.date).toLocaleDateString("fr-FR") : "-"}
             </small>
-
           </div>
         </div>
       ),
@@ -513,28 +392,20 @@ export default function InscriptionList() {
 
     {
       header: "Nouvel",
-
       accessor: "estNouvelle",
 
       render: (row) => (
         <CBadge
-          color={
-            row?.estNouvelle
-              ? "success"
-              : "info"
-          }
+          color={ row?.estNouvelle ? "success" : "info"}
           shape="rounded-pill"
         >
-          {row?.estNouvelle
-            ? "OUI"
-            : "NON"}
+          {row?.estNouvelle ? "OUI" : "NON"}
         </CBadge>
       ),
     },
 
     {
       header: "Actions",
-
       accessor: "actions",
 
       render: (row) => (
@@ -544,9 +415,7 @@ export default function InscriptionList() {
             color="light"
             size="sm"
             className="border"
-            onClick={() =>
-              handleEdit(row)
-            }
+            onClick={() => handleEdit(row)}
           >
             <CIcon icon={cilPencil} />
           </CButton>
@@ -555,9 +424,7 @@ export default function InscriptionList() {
             color="light"
             size="sm"
             className="border text-danger"
-            onClick={() =>
-              handleDelete(row.id)
-            }
+            onClick={() => handleDelete(row.id)}
           >
             <CIcon icon={cilTrash} />
           </CButton>
@@ -569,14 +436,10 @@ export default function InscriptionList() {
 
   return (
     <div className="container-fluid px-2">
-
       <CCard className="shadow-sm">
-
         {/* HEADER */}
         <CCardHeader className="bg-light py-3 px-4">
-
           <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
-
             <div>
               <h4 className="fw-bold mb-1">
                 Liste des inscriptions
@@ -588,7 +451,6 @@ export default function InscriptionList() {
             </div>
 
             <div className="d-flex gap-2">
-
               <CButton
                 color="light"
                 className="border"
@@ -604,11 +466,7 @@ export default function InscriptionList() {
               <CButton
                 color="primary"
                 disabled={!isValid}
-                onClick={() =>
-                  navigate(
-                    "/inscription/list/edit",
-                    { state: { param } }
-                  )
+                onClick={() => navigate("/inscription/list/edit",{ state: { param } })
                 }
               >
                 <CIcon
@@ -617,17 +475,14 @@ export default function InscriptionList() {
                 />
                 Ajouter
               </CButton>
-
             </div>
           </div>
         </CCardHeader>
 
         {/* BODY */}
         <CCardBody className="p-3">
-
           {/* FILTERS */}
           <CRow className="bg-light border rounded p-2 mb-3 g-2">
-
             {[
               {
                 label: "Année",
@@ -661,12 +516,9 @@ export default function InscriptionList() {
 
               <CCol
                 key={field.label}
-                xs={12}
-                sm={6}
-                md={4}
+                xs={12} sm={6} md={4}
               >
                 <CInputGroup>
-
                   <CInputGroupText>
                     <CIcon icon={field.icon} />
                   </CInputGroupText>
@@ -681,15 +533,12 @@ export default function InscriptionList() {
 
                     {field.options?.map(
                       (opt) => (
-                        <option
-                          key={field.getValue(opt)}
-                          value={field.getValue(opt)}
-                        >
+                        <option key={field.getValue(opt)}
+                          value={field.getValue(opt)}>
                           {field.getLabel(opt)}
                         </option>
                       )
                     )}
-
                   </CFormSelect>
                 </CInputGroup>
               </CCol>
@@ -697,53 +546,39 @@ export default function InscriptionList() {
           </CRow>
 
           <CRow className="g-3">
-
             {/* SIDEBAR */}
             <CCol lg={3}>
-
               <CCard className="bg-light h-100">
-
                 <CCardBody>
-
                   <div className="fw-bold mb-2">
                     Mentions
                   </div>
 
                   <CListGroup>
-
                     {mentions.map((m) => (
                       <CListGroupItem
                         key={m.id}
                         active={param.mentionId === m.id}
                         onClick={() => handleSelect(m)}
-                        style={{
-                          cursor: "pointer",
-                        }}
+                        style={{ cursor: "hand",}}
                         className="py-2"
                       >
                         {m?.niveau?.intitule}{" "}
                         {m?.intitule}
                       </CListGroupItem>
                     ))}
-
                   </CListGroup>
-
                 </CCardBody>
               </CCard>
             </CCol>
 
             {/* CONTENT */}
             <CCol lg={9}>
-
               <CCard className="shadow-sm h-100">
-
                 <CCardBody className="p-3">
-
                   {/* TOP */}
                   <div className="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-0">
-
                     <div>
-
                       {param?.mentionFullName && (
                         <CBadge
                           color="primary"
@@ -764,10 +599,8 @@ export default function InscriptionList() {
                       style={{
                         width: "100%",
                         maxWidth: 350,
-                      }}
-                    >
+                      }}>
                       <CInputGroup>
-
                         <CInputGroupText>
                           <CIcon icon={cilSearch} />
                         </CInputGroupText>
@@ -775,10 +608,7 @@ export default function InscriptionList() {
                         <CFormInput
                           placeholder="Rechercher..."
                           value={search}
-                          onChange={(e) =>
-                            setSearch(
-                              e.target.value
-                            )
+                          onChange={(e) => setSearch(e.target.value)
                           }
                         />
                       </CInputGroup>
@@ -787,44 +617,32 @@ export default function InscriptionList() {
 
                   {/* CONTENT */}
                   {loading ? (
-
                     <div className="text-center py-5">
                       <CSpinner color="primary" />
                     </div>
-
                   ) : error ? (
-
                     <CAlert color="danger">
                       {error}
                     </CAlert>
-
                   ) : !param?.mentionId ? (
-
                     <CAlert color="info">
                       Sélectionnez une mention
                     </CAlert>
-
                   ) : filteredData.length === 0 ? (
-
                     <CAlert color="warning">
                       Aucune inscription trouvée
                     </CAlert>
-
                   ) : (
-
                     <Table
                       columns={columns}
                       data={filteredData}
                       itemsPerPage={10}
                       enableSearch={false}
                     />
-
                   )}
-
                 </CCardBody>
               </CCard>
             </CCol>
-
           </CRow>
         </CCardBody>
       </CCard>

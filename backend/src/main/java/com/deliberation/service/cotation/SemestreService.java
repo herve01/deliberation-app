@@ -46,4 +46,9 @@ public class SemestreService implements IService<Semestre, String> {
     public List<Semestre> getAll() {
         return repository.findAll();
     }
+
+    @Override
+    public Long count() {
+        return repository.count();
+    }
 }

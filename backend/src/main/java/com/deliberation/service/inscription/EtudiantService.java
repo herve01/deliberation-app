@@ -7,6 +7,8 @@ import com.deliberation.repository.inscription.EtudiantRepository;
 import com.deliberation.service.IService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,5 +47,33 @@ public class EtudiantService implements IService<Etudiant, String> {
     @Override
     public List<Etudiant> getAll() {
         return repository.findAll();
+    }
+
+    @Override
+    public Long count() {
+        return repository.count();
+    }
+
+    public long countPreviousYearEtudiants() {
+
+        LocalDateTime debut = LocalDate.now()
+                .minusYears(1)
+                .withDayOfYear(1)
+                .atStartOfDay();
+
+        LocalDateTime fin = debut.plusYears(1);
+
+        return repository.countBetween(debut, fin);
+    }
+
+    public long countThisYearEtudiants() {
+
+        LocalDateTime debut = LocalDate.now()
+                .withDayOfYear(1)
+                .atStartOfDay();
+
+        LocalDateTime fin = debut.plusYears(1);
+
+        return repository.countBetween(debut, fin);
     }
 }

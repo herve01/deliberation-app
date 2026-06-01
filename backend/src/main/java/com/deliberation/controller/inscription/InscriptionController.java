@@ -1,10 +1,14 @@
 package com.deliberation.controller.inscription;
 
+import com.deliberation.dto.DashboardCardDTO;
 import com.deliberation.dto.inscription.InscriptionDTO;
+import com.deliberation.dto.inscription.response.InscriptionDashboardDTO;
 import com.deliberation.dto.inscription.response.InscriptionRequestDTO;
 import com.deliberation.model.enums.TypeMotif;
 import com.deliberation.model.inscription.*;
 import com.deliberation.model.setting.Pays;
+import com.deliberation.service.cotation.MentionSemestreEcueDetailService;
+import com.deliberation.service.cotation.MentionSemestreEcueService;
 import com.deliberation.service.inscription.*;
 import com.deliberation.service.setting.PaysService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,7 +20,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+
+import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 
 @RestController
 @RequestMapping("/api/inscriptions")
@@ -25,21 +33,30 @@ public class InscriptionController {
     private final InscriptionService service;
     private final AnneeService anneeService;
     private final MentionService mentionService;
+    private final FiliereService filiereService;
+    private final DomaineService domaineService;
     private final PaysService paysService;
     private final EtudiantService etudiantService;
+    private final MentionSemestreEcueDetailService mentionSemestreEcueDetailService;
+    private final MentionSemestreEcueService mentionSemestreEcueService;
+
 
     private static final Logger logger = LoggerFactory.getLogger(InscriptionController.class);
 
     public InscriptionController(InscriptionService service,
                                  AnneeService anneeService,
-                                 MentionService mentionService,
+                                 MentionService mentionService, FiliereService filiereService, DomaineService domaineService,
                                  PaysService paysService,
-                                 EtudiantService etudiantService) {
+                                 EtudiantService etudiantService, MentionSemestreEcueDetailService mentionSemestreEcueDetailService, MentionSemestreEcueService mentionSemestreEcueService) {
         this.service = service;
         this.anneeService = anneeService;
         this.mentionService = mentionService;
+        this.filiereService = filiereService;
+        this.domaineService = domaineService;
         this.paysService = paysService;
         this.etudiantService = etudiantService;
+        this.mentionSemestreEcueDetailService = mentionSemestreEcueDetailService;
+        this.mentionSemestreEcueService = mentionSemestreEcueService;
     }
 
     @GetMapping
@@ -287,5 +304,44 @@ public class InscriptionController {
 
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/annee/{anneeId}/dashboard")
+    @Operation(summary = "Obtenir les statistiques du dashboard des inscriptions")
+    public ResponseEntity<InscriptionDashboardDTO> getDashboard(@PathVariable String anneeId) {
+
+        InscriptionDashboardDTO dto = new InscriptionDashboardDTO();
+
+        var count = 0L;
+        var objectif = 0L;
+
+        count = mentionService.count();
+        dto.mentions = new DashboardCardDTO(count, count);
+
+        count = filiereService.count();
+        dto.filieres = new DashboardCardDTO(count, count);
+
+        count = domaineService.count();
+        dto.domaines = new DashboardCardDTO(count, count);
+
+        objectif = service.countPreviousYear();
+        count = service.count(anneeId);
+        dto.totalInscription = new DashboardCardDTO(count, objectif);
+
+        objectif = etudiantService.countPreviousYearEtudiants();
+        count = etudiantService.countThisYearEtudiants();
+        dto.etudiants = new DashboardCardDTO(count, objectif);
+
+        objectif = service.countPreviousDay(anneeId);
+        count = service.countToday(anneeId);
+        dto.toDay = new DashboardCardDTO(count, objectif);
+
+        objectif = service.countPreviousMonth(anneeId);
+        count = service.countThisMonth(anneeId);
+        dto.currentMonth = new DashboardCardDTO(count, objectif);
+
+        logger.info("[InscriptionController] GET /api/inscriptions/annee/{}/dashboard", anneeId);
+
+        return ResponseEntity.ok(dto);
     }
 }

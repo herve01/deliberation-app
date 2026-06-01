@@ -13,4 +13,6 @@ public interface IService <T, ID> {
     Optional<T> get(ID id);
 
     List<T> getAll();
+
+    Long count();
 }

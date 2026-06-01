@@ -44,4 +44,9 @@ public class CycleService implements IService<Cycle, String> {
     public List<Cycle> getAll() {
         return repository.findAllByOrderByOrdreAsc();
     }
+
+    @Override
+    public Long count() {
+        return repository.count();
+    }
 }

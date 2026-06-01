@@ -1,0 +1,13 @@
+package com.deliberation.repository.deliberation;
+
+import com.deliberation.model.deliberation.EtudiantEcueTransfert;
+import com.deliberation.model.deliberation.Personnel;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface EtudiantEcueTransfertRepository extends JpaRepository<EtudiantEcueTransfert, String> {
+
+}

@@ -118,10 +118,17 @@ const navigation = [
         icon: "bi bi-diagram-2",
       },
       {
-        name: "Délibérations",
-        to: "/deliberations",
+        name: "Délibération",
+        to: "/deliberation/list",
         icon: "bi bi-clipboard-data",
       },
+
+    {
+      name: "Délibération Traitement",
+      to: "/deliberation/traitement",
+      icon: "bi bi-clipboard-data",
+    },
+
     ],
   },
    { divider: true },

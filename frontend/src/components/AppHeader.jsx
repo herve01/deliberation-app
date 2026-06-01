@@ -71,8 +71,8 @@ const AppHeader = ({ toggleSidebar }) => {
 
   // COMMON BUTTON STYLE
   const actionButtonStyle = {
-    width: 42,
-    height: 42,
+    width: 50,
+    height: 50,
     background: "rgba(255,255,255,0.08)",
     border:
       "1px solid rgba(255,255,255,0.12)",

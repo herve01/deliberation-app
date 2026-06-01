@@ -1,0 +1,51 @@
+package com.deliberation.model.cotation.pojo;
+
+import com.deliberation.model.cotation.MentionSemestreEcueDetail;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Transient;
+
+public class MentionSemestreEcuePojo {
+
+    private MentionSemestreEcueDetail mentionSemestreEcueDetail;
+
+    private Boolean estCote;
+
+    private long countManqueCote;
+
+    private long countWithCote;
+
+    public MentionSemestreEcueDetail getMentionSemestreEcueDetail() {
+        return mentionSemestreEcueDetail;
+    }
+
+    public void setMentionSemestreEcueDetail(MentionSemestreEcueDetail mentionSemestreEcueDetail) {
+        this.mentionSemestreEcueDetail = mentionSemestreEcueDetail;
+    }
+
+    public Boolean getEstCote() {
+        return estCote;
+    }
+
+    public void setEstCote(Boolean estCote) {
+        this.estCote = estCote;
+    }
+
+    public long getCountManqueCote() {
+        return countManqueCote;
+    }
+
+    public void setCountManqueCote(long countManqueCote) {
+        this.countManqueCote = countManqueCote;
+    }
+
+    public long getCountWithCote() {
+
+        return countWithCote;
+    }
+
+    public void setCountWithCote(long countWithCote) {
+        this.countWithCote = countWithCote;
+
+        estCote = countWithCote > 0;
+    }
+}

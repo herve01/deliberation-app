@@ -53,6 +53,11 @@ public class MentionService implements IService<Mention, String> {
         return repository.findAll();
     }
 
+    @Override
+    public Long count() {
+        return repository.count();
+    }
+
     public List<Mention> getAll(String filiereId) {
         return repository.findByFiliereIdOrderByNiveauOrdreAsc(filiereId);
     }

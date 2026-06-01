@@ -69,6 +69,11 @@ public class UserService implements IService<User, String> {
         return repository.findAll();
     }
 
+    @Override
+    public Long count() {
+        return repository.count();
+    }
+
     public List<UserResponseDTO> getDTOAll() {
 
         return repository.findAll()

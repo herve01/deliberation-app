@@ -16,6 +16,14 @@ import {
   CSpinner,
   CImage,
   CProgress,
+  CFormSelect,
+  CInputGroup,
+  CInputGroupText,
+  CAlert,
+    CDropdown,
+    CDropdownToggle,
+    CDropdownMenu,
+    CDropdownItem,
 } from "@coreui/react";
 
 import {
@@ -31,23 +39,27 @@ import {
 import CIcon from "@coreui/icons-react";
 
 import inscriptionService from "@src/infrastructure/services/inscription/inscriptionService";
-import etudiantService from "@src/infrastructure/services/inscription/etudiantService";
-
-import domaineService from "@src/infrastructure/services/inscription/domaineService";
-import filiereService from "@src/infrastructure/services/inscription/filiereService";
-import mentionService from "@src/infrastructure/services/inscription/mentionService";
+import anneeService from "@src/infrastructure/services/inscription/anneeService";
 
 const Dashboard = () => {
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [annees, setAnnees] = useState([]);
+
+  const [dashboard, setDashboard] = useState({});
+
+  // SAVE LOCAL STORAGE
+  const [anneeId, setAnneeId] = useState(
+    localStorage.getItem("dashboard_annee_id") || ""
+  );
 
   const [stats, setStats] = useState({
     inscriptions: 0,
     inscriptionsToday: 0,
     inscriptionsMonth: 0,
-    inscriptionsYear: 0,
     etudiants: 0,
-
     domaines: 0,
     filieres: 0,
     mentions: 0,
@@ -55,106 +67,121 @@ const Dashboard = () => {
 
   const [recentInscriptions, setRecentInscriptions] = useState([]);
 
+  // LOAD ANNEES
   useEffect(() => {
-    loadData();
-  }, []);
 
-  const loadData = async () => {
+    async function load() {
 
-    try {
+      try {
 
-      setLoading(true);
+        setLoading(true);
 
-      const [
-        inscriptions,
-        etudiants,
-        domaines,
-        filieres,
-        mentions,
-      ] = await Promise.all([
-        inscriptionService.getAll(),
-        etudiantService.getAll(),
-        domaineService.getAll(),
-        filiereService.getAll(),
-        mentionService.getAll(),
-      ]);
+        const data = await anneeService.getAll();
 
-      const now = new Date();
+        setAnnees(data || []);
 
-      const currentDay = now.toDateString();
+        // AUTO SELECT
+        if (!anneeId && data?.length > 0) {
 
-      const currentMonth = now.getMonth();
+          const defaultAnnee = data[0]?.id;
 
-      const currentYear = now.getFullYear();
+          setAnneeId(defaultAnnee);
 
-      const inscriptionsToday = inscriptions.filter((i) => {
+          localStorage.setItem(
+            "dashboard_annee_id",
+            defaultAnnee
+          );
 
-        if (!i.createdAt) return false;
+        }
 
-        return (
-          new Date(i.createdAt).toDateString() === currentDay
-        );
+      } catch (e) {
 
-      }).length;
+        console.error(e);
 
-      const inscriptionsMonth = inscriptions.filter((i) => {
+        setError("Impossible de charger les années");
 
-        if (!i.createdAt) return false;
+      } finally {
 
-        const d = new Date(i.createdAt);
+        setLoading(false);
 
-        return (
-          d.getMonth() === currentMonth &&
-          d.getFullYear() === currentYear
-        );
-
-      }).length;
-
-      const inscriptionsYear = inscriptions.filter((i) => {
-
-        if (!i.createdAt) return false;
-
-        return (
-          new Date(i.createdAt).getFullYear() === currentYear
-        );
-
-      }).length;
-
-      setStats({
-        inscriptions: inscriptions.length,
-        inscriptionsToday,
-        inscriptionsMonth,
-        inscriptionsYear,
-        etudiants: etudiants.length,
-
-        domaines: domaines.length,
-        filieres: filieres.length,
-        mentions: mentions.length,
-      });
-
-      const sorted = [...inscriptions].sort(
-        (a, b) =>
-          new Date(b.createdAt || 0) -
-          new Date(a.createdAt || 0)
-      );
-
-      setRecentInscriptions(sorted.slice(0, 5));
-
-    } catch (error) {
-
-      console.error(
-        "Erreur lors du chargement du dashboard :",
-        error
-      );
-
-    } finally {
-
-      setLoading(false);
+      }
 
     }
 
+    load();
+
+  }, []);
+
+  // CHANGE ANNEE
+  const handleChange = () => (e) => {
+
+    const value = e.target.value;
+
+    setAnneeId(value);
+
+    localStorage.setItem(
+      "dashboard_annee_id",
+      value
+    );
+
   };
 
+  // LOAD DASHBOARD
+  useEffect(() => {
+
+    if (!anneeId) return;
+
+    async function loadDashboard() {
+
+      try {
+
+        setLoading(true);
+
+        const [inscriptions, data] = await Promise.all([
+          inscriptionService.getAllByTypeId(
+            "ANNEE",
+            anneeId
+          ),
+
+          inscriptionService.getInscriptionDashboard(
+            anneeId
+          ),
+        ]);
+
+        setDashboard(data || {});
+        setRecentInscriptions(inscriptions || []);
+
+        setStats({
+          inscriptions: data?.totalInscription?.count || 0,
+          inscriptionsToday: data?.toDay?.count || 0,
+          inscriptionsMonth: data?.currentMonth?.count || 0,
+          etudiants: data?.etudiants?.count || 0,
+          domaines: data?.domaines?.count || 0,
+          filieres: data?.filieres?.count || 0,
+          mentions: data?.mentions?.count || 0,
+        });
+
+      } catch (e) {
+
+        console.error(e);
+
+        setError(
+          "Impossible de charger le dashboard"
+        );
+
+      } finally {
+
+        setLoading(false);
+
+      }
+
+    }
+
+    loadDashboard();
+
+  }, [anneeId]);
+
+  // FORMAT DATE
   const formatDate = (date) => {
 
     if (!date) return "-";
@@ -170,16 +197,17 @@ const Dashboard = () => {
 
   };
 
+  // STAT CARD
   const StatCard = ({
     title,
     value,
     color,
     icon,
-    progress = 75,
+    progress = 0,
   }) => (
 
     <CCard
-      className="border-0 shadow-sm h-100"
+      className="border-1 shadow-sm h-100"
       style={{
         borderRadius: 18,
       }}
@@ -187,12 +215,12 @@ const Dashboard = () => {
 
       <CCardBody>
 
-        <div className="d-flex justify-content-between align-items-start mb-3">
+        <div className="d-flex justify-content-between align-items-start mb-0">
 
           <div>
 
             <div
-              className="text-medium-emphasis fw-semibold mb-2"
+              className="text-medium-emphasis fw-semibold mb-1"
               style={{
                 fontSize: 13,
               }}
@@ -232,7 +260,7 @@ const Dashboard = () => {
           </small>
 
           <small className={`text-${color} fw-semibold`}>
-            {progress}%
+            {progress || 0}%
           </small>
 
         </div>
@@ -240,7 +268,7 @@ const Dashboard = () => {
         <CProgress
           thin
           color={color}
-          value={progress}
+          value={progress || 0}
         />
 
       </CCardBody>
@@ -249,6 +277,7 @@ const Dashboard = () => {
 
   );
 
+  // LOADING
   if (loading) {
 
     return (
@@ -268,10 +297,16 @@ const Dashboard = () => {
 
     <div className="container-fluid px-3">
 
-      {/* HEADER */}
+      {/* ERROR */}
+      {error && (
+        <CAlert color="danger">
+          {error}
+        </CAlert>
+      )}
 
+      {/* HEADER */}
       <div
-        className="mb-4 p-4 shadow-sm"
+        className="mb-3 p-3 shadow-sm"
         style={{
           borderRadius: 20,
           background:
@@ -285,7 +320,7 @@ const Dashboard = () => {
           <div>
 
             <h2 className="fw-bold mb-2">
-              Tableau de bord académique
+              Tableau de bord
             </h2>
 
             <div
@@ -296,32 +331,105 @@ const Dashboard = () => {
               Gestion des inscriptions universitaires
             </div>
 
-          </div>
-
-          <div
-            className="px-4 py-3"
-            style={{
-              background: "rgba(255,255,255,0.15)",
-              borderRadius: 16,
-            }}
-          >
-
-            <div className="small">
-              Année académique
-            </div>
-
-            <div className="fw-bold fs-5">
-              2025 - 2026
-            </div>
 
           </div>
+
+        <div
+          style={{
+            position: "relative",
+          }}
+        >
+
+          <CDropdown alignment="end">
+
+            <CDropdownToggle
+              color="light"
+              className="border-0 shadow-sm d-flex align-items-center gap-2 px-4 py-2"
+              style={{
+                borderRadius: 16,
+                background: "rgba(255,255,255,0.15)",
+                color: "#fff",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+
+              <CIcon icon={cilCalendar} />
+
+              <div className="text-start">
+
+                <div
+                  className="small"
+                  style={{
+                    opacity: 0.8,
+                  }}
+                >
+                  Année académique
+                </div>
+
+                <div className="fw-bold">
+
+                  {
+                    annees.find(
+                      (a) => a.id == anneeId
+                    )?.annee || "Sélectionner"
+                  }
+
+                </div>
+
+              </div>
+
+            </CDropdownToggle>
+
+            <CDropdownMenu
+              className="border-0 shadow-lg mt-2"
+              style={{
+                borderRadius: 16,
+                minWidth: 230,
+              }}
+            >
+              {annees?.map((annee) => (
+
+                <CDropdownItem
+                  key={annee.id}
+                  active={annee.id == anneeId}
+                  className="py-2 px-3"
+                  onClick={() => {
+                    setAnneeId(annee.id);
+                    localStorage.setItem(
+                      "dashboard_annee_id",
+                      annee.id
+                    );
+                  }}
+                >
+
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className="fw-semibold">
+                      {annee.annee}
+                    </span>
+                    {annee.id == anneeId && (
+                      <CBadge
+                        color="primary"
+                        shape="rounded-pill"
+                      >
+                        Active
+                      </CBadge>
+                    )}
+                  </div>
+
+                </CDropdownItem>
+
+              ))}
+
+            </CDropdownMenu>
+          </CDropdown>
+
+        </div>
 
         </div>
 
       </div>
 
-      {/* STATISTIQUES */}
-
+      {/* STATS */}
       <CRow className="g-4 mb-4">
 
         <CCol xs={12} sm={6} xl={3}>
@@ -330,7 +438,9 @@ const Dashboard = () => {
             value={stats.inscriptions}
             color="primary"
             icon={cilSchool}
-            progress={92}
+            progress={
+              dashboard.totalInscription?.progression || 0
+            }
           />
         </CCol>
 
@@ -340,7 +450,9 @@ const Dashboard = () => {
             value={stats.inscriptionsToday}
             color="success"
             icon={cilCalendar}
-            progress={68}
+            progress={
+              dashboard.toDay?.progression || 0
+            }
           />
         </CCol>
 
@@ -350,7 +462,9 @@ const Dashboard = () => {
             value={stats.inscriptionsMonth}
             color="warning"
             icon={cilCalendarCheck}
-            progress={84}
+            progress={
+              dashboard.currentMonth?.progression || 0
+            }
           />
         </CCol>
 
@@ -360,14 +474,15 @@ const Dashboard = () => {
             value={stats.etudiants}
             color="info"
             icon={cilPeople}
-            progress={95}
+            progress={
+              dashboard.etudiants?.progression || 0
+            }
           />
         </CCol>
 
       </CRow>
 
-      {/* STRUCTURE ACADEMIQUE */}
-
+      {/* STRUCTURE */}
       <CRow className="g-4 mb-4">
 
         <CCol xs={12} sm={6} xl={4}>
@@ -376,7 +491,9 @@ const Dashboard = () => {
             value={stats.domaines}
             color="primary"
             icon={cilLibrary}
-            progress={90}
+            progress={
+              dashboard.domaines?.progression || 0
+            }
           />
         </CCol>
 
@@ -386,7 +503,9 @@ const Dashboard = () => {
             value={stats.filieres}
             color="success"
             icon={cilLayers}
-            progress={75}
+            progress={
+              dashboard.filieres?.progression || 0
+            }
           />
         </CCol>
 
@@ -396,18 +515,16 @@ const Dashboard = () => {
             value={stats.mentions}
             color="warning"
             icon={cilEducation}
-            progress={82}
+            progress={
+              dashboard.mentions?.progression || 0
+            }
           />
         </CCol>
 
       </CRow>
 
-      {/* TABLE INSCRIPTIONS */}
-
-      <CCard
-        className="border-1 shadow-sm"
-
-      >
+      {/* TABLE */}
+      <CCard className="border-1 shadow-sm">
 
         <CCardHeader className="bg-light border-1 py-2 d-flex justify-content-between align-items-center">
 
@@ -442,11 +559,14 @@ const Dashboard = () => {
             className="mb-0"
           >
 
-            <CTableHead color="light" className="border-1">
+            <CTableHead
+              color="light"
+              className="border-1"
+            >
 
               <CTableRow>
 
-                <CTableHeaderCell >
+                <CTableHeaderCell>
                   Étudiant
                 </CTableHeaderCell>
 
@@ -468,7 +588,10 @@ const Dashboard = () => {
 
                 recentInscriptions.map((i) => (
 
-                  <CTableRow key={i.id} className="border-1">
+                  <CTableRow
+                    key={i.id}
+                    className="border-1"
+                  >
 
                     <CTableDataCell className="border-0 py-1">
 
@@ -504,9 +627,11 @@ const Dashboard = () => {
                               fontSize: 13,
                             }}
                           >
+
                             {`${i.etudiant?.prenom?.charAt(0) || ""
                               }${i.etudiant?.nom?.charAt(0) || ""
                               }`}
+
                           </div>
 
                         )}

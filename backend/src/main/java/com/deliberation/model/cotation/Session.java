@@ -1,17 +1,9 @@
 package com.deliberation.model.cotation;
 
-import com.deliberation.dto.cotation.SemestreDTO;
 import com.deliberation.dto.cotation.SessionDTO;
 import com.deliberation.model.ModelBase;
-import com.deliberation.model.inscription.Mention;
-import com.deliberation.model.inscription.Niveau;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-
-import java.util.UUID;
+import jakarta.persistence.*;
 
 @Entity
 public class Session extends ModelBase {
@@ -20,6 +12,9 @@ public class Session extends ModelBase {
     private Semestre semestre;
 
     private Integer numero;
+
+    @Column(name = "est_annuel")
+    private Boolean estAnnuel;
 
     public Semestre getSemestre() {
         return semestre;
@@ -37,12 +32,21 @@ public class Session extends ModelBase {
         this.numero = numero;
     }
 
+    public Boolean getEstAnnuel() {
+        return estAnnuel;
+    }
+
+    public void setEstAnnuel(Boolean estAnnuel) {
+        this.estAnnuel = estAnnuel;
+    }
+
     public void fromDTO(SessionDTO dto, Semestre semestre)
     {
         if (dto == null) return;
 
         setId(dto.id);
         setNumero(dto.numero);
+        setEstAnnuel(dto.estAnnuel);
 
         if(semestre != null)
             setSemestre(semestre);

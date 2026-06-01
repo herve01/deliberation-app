@@ -44,4 +44,9 @@ public class EcueService implements IService<Ecue, String> {
     public List<Ecue> getAll() {
         return repository.findAll();
     }
+
+    @Override
+    public Long count() {
+        return repository.count();
+    }
 }

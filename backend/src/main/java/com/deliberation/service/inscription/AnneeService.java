@@ -74,4 +74,9 @@ public class AnneeService implements IService<AnneeAcademique, String> {
                 .findTopByDateOuvertureGreaterThanOrderByDateOuvertureAsc(today)
                 .orElse(null);
     }
+
+    @Override
+    public Long count() {
+        return repository.count();
+    }
 }

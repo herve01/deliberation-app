@@ -45,4 +45,9 @@ public class PersonnelService implements IService<Personnel, String> {
         return repository.findAll();
     }
 
+    @Override
+    public Long count() {
+        return repository.count();
+    }
+
 }

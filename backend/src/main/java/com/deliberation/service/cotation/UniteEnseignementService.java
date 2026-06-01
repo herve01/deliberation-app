@@ -47,4 +47,9 @@ public class UniteEnseignementService implements IService<UniteEnseignement, Str
         return repository.findAll();
     }
 
+    @Override
+    public Long count() {
+        return repository.count();
+    }
+
 }

@@ -5,78 +5,101 @@ const baseUrl = `${utils.url}/api`;
 
 // helper
 const buildUrl = (entity, path = "") => {
-  let url = `/${entity}`;
-  if (path) url += `/${path}`;
-  return url;
+  const cleanEntity = entity.startsWith("/") ? entity : `/${entity}`;
+  const cleanPath = path ? `/${path}` : "";
+  return `${cleanEntity}${cleanPath}`;
 };
 
-// GET ALL ou avec path + params
+// GET ALL
 const getAll = async (entity, options = {}) => {
   const { path = "", params = {} } = options;
 
   const url = buildUrl(entity, path);
 
   const { data } = await http.get(url, { params });
-  console.log("GET:", `${baseUrl}${url}`);
 
+  console.log("GET:", `${baseUrl}${url}`);
   return data;
 };
 
 // GET (id OU path custom)
 const get = async (entity, arg = null, options = {}) => {
-  let url = `/${entity}`;
+  let url = buildUrl(entity);
 
-  // cas 1 : ID
+  // cas ID
   if (typeof arg === "string" || typeof arg === "number") {
     url += `/${arg}`;
   }
 
-  // cas 2 : path custom
-  if (typeof arg === "object" && arg !== null) {
+  // cas options direct
+  if (arg && typeof arg === "object" && !Array.isArray(arg)) {
     options = arg;
   }
 
+  // path custom
   if (options.path) {
     url += `/${options.path}`;
   }
 
-  const { data } = await http.get(url, { params: options.params || {} });
+  const { data } = await http.get(url, {
+    params: options.params || {}
+  });
 
   console.log("GET:", `${baseUrl}${url}`);
   return data;
 };
 
+// SEARCH
 const search = async (entity, q) => {
-  const { data } = await http.get(`/${entity}/search`, {
-    params: { q },
+  const url = buildUrl(entity, "search");
+
+  const { data } = await http.get(url, {
+    params: { q }
   });
+
+  console.log("SEARCH:", `${baseUrl}${url}`);
   return data;
 };
 
+// ADD (POST)
 const add = async (entity, dto) => {
-  const { data } = await http.post(`/${entity}`, dto);
-  console.log("POST:", `${baseUrl}/${entity}`);
+  const url = buildUrl(entity);
+
+  const { data } = await http.post(url, dto);
+
+  console.log("POST:", `${baseUrl}${url}`);
   return data;
 };
 
+// UPDATE
 const update = async (entity, id, dto) => {
-  const { data } = await http.put(`/${entity}/${id}`, dto);
-  console.log("PUT:", `${baseUrl}/${entity}/${id}`);
+  const url = buildUrl(entity, id);
+
+  const { data } = await http.put(url, dto);
+
+  console.log("PUT:", `${baseUrl}${url}`);
   return data;
 };
 
+// DELETE
 const remove = async (entity, id) => {
-  await http.delete(`/${entity}/${id}`);
-  console.log("DELETE:", `${baseUrl}/${entity}/${id}`);
+  const url = buildUrl(entity, id);
+
+  await http.delete(url);
+
+  console.log("DELETE:", `${baseUrl}${url}`);
 };
 
+// LOGIN
 const login = async (entity, dto) => {
-  const { data } = await http.post(`/${entity}`, dto);
-  console.log("LOGIN:", `${baseUrl}/${entity}`);
+  const url = buildUrl(entity);
+
+  const { data } = await http.post(url, dto);
+
+  console.log("LOGIN:", `${baseUrl}${url}`);
   return data;
 };
 
-// export unique
 export default {
   getAll,
   get,

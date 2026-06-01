@@ -23,5 +23,7 @@ export default {
   delete: (id) => api.remove(entity, id),
 
   // GET /etudiant/{etudiantId}/annee/{anneeId}
-    getAllByMentionIncrementor: (incrementor) => api.getAll(entity, { path: `semestre-numero-incrementor/${incrementor}`,}),
+  getAllByMentionIncrementor: (incrementor) => api.getAll(entity, { path: `semestre-numero-incrementor/${incrementor}`,}),
+
+  getAllByWithoutMentionIncrementor: (incrementor) => api.getAll(entity, { path: `semestre-without-numero-incrementor/${incrementor}`,}),
 };

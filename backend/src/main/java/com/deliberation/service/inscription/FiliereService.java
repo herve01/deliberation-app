@@ -49,6 +49,11 @@ public class FiliereService implements IService<Filiere, String> {
         return repository.findAll();
     }
 
+    @Override
+    public Long count() {
+        return repository.count();
+    }
+
     public List<Filiere> getAll(Boolean withDomaine) {
         return repository.findAll()
                 .stream()

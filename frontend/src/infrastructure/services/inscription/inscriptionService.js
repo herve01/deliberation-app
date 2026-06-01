@@ -3,24 +3,24 @@ import api from "@src/infrastructure/services/commonService";
 const entity = "inscriptions";
 
 export default {
-  // -------------------------
-  // CRUD
-  // -------------------------
+    // -------------------------
+    // CRUD
+    // -------------------------
 
-  // GET /api/inscriptions
-  getAll: () => api.getAll(entity),
+    // GET /api/inscriptions
+    getAll: () => api.getAll(entity),
 
-  // GET /api/inscriptions/{id}
-  getById: (id) => api.get(entity, id),
+    // GET /api/inscriptions/{id}
+    getById: (id) => api.get(entity, id),
 
-  // POST /api/inscriptions
-  add: (dto) => api.add(entity, dto),
+    // POST /api/inscriptions
+    add: (dto) => api.add(entity, dto),
 
-  // PUT /api/inscriptions/{id}
-  update: (id, dto) => api.update(entity, id, dto),
+    // PUT /api/inscriptions/{id}
+    update: (id, dto) => api.update(entity, id, dto),
 
-  // DELETE /api/inscriptions/{id}
-  delete: (id) => api.remove(entity, id),
+    // DELETE /api/inscriptions/{id}
+    delete: (id) => api.remove(entity, id),
 
     // GET /liste/{type}/{id}
     getAllByTypeId: (type, id) => api.getAll(entity, { path: `liste/${type}/${id}`,}),
@@ -37,6 +37,9 @@ export default {
     // POST /add_all
     addWithEtudiant: (dto) => api.add(`${entity}/add_all`, dto),
 
-      // PUT /api/inscriptions/{id}
+    // PUT /api/inscriptions/{id}
     updateWithEtudiant: (id, dto) => api.update(`${entity}/update_all`, id, dto),
+
+    // GET /annee/{anneeId}/dashboard
+    getInscriptionDashboard: (anneeId) => api.get(entity, { path: `annee/${anneeId}/dashboard`,}),
 };

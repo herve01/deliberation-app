@@ -20,15 +20,17 @@ import {
 
 import CIcon from "@coreui/icons-react";
 
+import inscriptionService from "@src/infrastructure/services/inscription/inscriptionService";
 import domaineService from "@src/infrastructure/services/inscription/domaineService";
 import filiereService from "@src/infrastructure/services/inscription/filiereService";
 import mentionService from "@src/infrastructure/services/inscription/mentionService";
 import anneeService from "@src/infrastructure/services/inscription/anneeService";
-import sessionService from "@src/infrastructure/services/cotation/sessionService";
-import mentionEcueDetailService from "@src/infrastructure/services/cotation/mentionEcueDetailService";
-import inscriptionService from "@src/infrastructure/services/inscription/inscriptionService";
 
-import EditNoteModal from "@src/views/modules/shared/components/EditNoteModal";
+import sessionService from "@src/infrastructure/services/cotation/sessionService";
+import cotationService from "@src/infrastructure/services/cotation/cotationService";
+import cotationDetailService from "@src/infrastructure/services/cotation/cotationDetailService";
+
+import CotationEtudiantsModal from "@src/views/modules/cotation/pages/modal/CotationEtudiantsModal";
 
 const STORAGE = {
   anneeId: "anneeIdStored",
@@ -36,7 +38,6 @@ const STORAGE = {
   filiereId: "filiereIdStored",
   mentionId: "mentionIdStored",
   session: "sessionStored",
-  mentionFullName: "mentionFullNameStored",
 };
 
 export default function CotationList() {
@@ -44,37 +45,35 @@ export default function CotationList() {
   const location = useLocation();
 
   // ================= STATE =================
-  const [ecues, setEcues] = useState([]);
-  const [inscriptions, setInscriptions] = useState([]);
+  const [cotations,setCotations] = useState([]);
+    const [inscriptions,setInscriptions] = useState([]);
 
-  const [domaines, setDomaines] = useState([]);
-  const [filieres, setFilieres] = useState([]);
-  const [mentions, setMentions] = useState([]);
-  const [annees, setAnnees] = useState([]);
-  const [sessions, setSessions] = useState([]);
+    const [domaines,setDomaines] = useState([]);
+    const [filieres,setFilieres] = useState([]);
+    const [mentions,setMentions] = useState([]);
+    const [annees,setAnnees] = useState([]);
+    const [sessions,setSessions] = useState([]);
 
-  const [selectedMention, setSelectedMention] = useState(null);
-  const [selectedSession, setSelectedSession] = useState(
-    JSON.parse(localStorage.getItem(STORAGE.session) || "null")
-  );
+    const [cotation,setCotation] = useState({});
+    const [selectedRow,setSelectedRow] = useState(null);
 
-  const [selectedEcue, setSelectedEcue] = useState(null);
+    const [selectedMention,setSelectedMention] = useState(null);
+    const [selectedSession,setSelectedSession] = useState(JSON.parse(localStorage.getItem(STORAGE.session) || "null"));
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+    const [loading,setLoading] = useState(true);
+    const [error,setError] = useState("");
 
-  const [search, setSearch] = useState("");
-  const [visible, setVisible] = useState(false);
+    const [search,setSearch] = useState("");
+    const [visible,setVisible] = useState(false);
 
-  const [incrementor, setIncrementor] = useState(0);
+    const [incrementor,setIncrementor] = useState(0);
 
-  const [param, setParam] = useState({
-    anneeId: localStorage.getItem(STORAGE.anneeId) || "",
-    domaineId: localStorage.getItem(STORAGE.domaineId) || "",
-    filiereId: localStorage.getItem(STORAGE.filiereId) || "",
-    mentionId: localStorage.getItem(STORAGE.mentionId) || "",
-    mentionFullName: localStorage.getItem(STORAGE.mentionFullName) || "",
-  });
+    const [param, setParam] = useState({
+        anneeId: localStorage.getItem(STORAGE.anneeId) || "",
+        domaineId: localStorage.getItem(STORAGE.domaineId) || "",
+        filiereId: localStorage.getItem(STORAGE.filiereId) || "",
+        mentionId: localStorage.getItem(STORAGE.mentionId) || ""
+    });
 
   // ================= LOCAL STORAGE =================
   useEffect(() => {
@@ -82,20 +81,33 @@ export default function CotationList() {
     localStorage.setItem(STORAGE.domaineId, param.domaineId || "");
     localStorage.setItem(STORAGE.filiereId, param.filiereId || "");
     localStorage.setItem(STORAGE.mentionId, param.mentionId || "");
-    localStorage.setItem(STORAGE.mentionFullName, param.mentionFullName || "");
-
-    localStorage.setItem(
-      STORAGE.session,
+    localStorage.setItem(STORAGE.session,
       selectedSession ? JSON.stringify(selectedSession) : ""
     );
   }, [param, selectedSession]);
+
+  const handleModalSubmit = (data) => {
+
+    setCotations((prev) =>
+          prev.map((item) =>
+             item?.mentionSemestreEcueDetail.id === data.mentionSemestreEcueId
+                ? {
+                    ...item,
+                    estCote: data.estCote,
+                    countWithCote: data.countWithCote,
+                    countManqueCote: data.countManqueCote,
+                  }
+                : item
+          )
+       );
+  };
+
 
   // ================= INIT =================
   useEffect(() => {
     async function load() {
       try {
         setLoading(true);
-
         const [d, a] = await Promise.all([
           domaineService.getAll(),
           anneeService.getAll(),
@@ -103,35 +115,63 @@ export default function CotationList() {
 
         setDomaines(d || []);
         setAnnees(a || []);
+
       } catch {
-        setError("Erreur chargement données");
+        setError("Erreur chargement données <<domaines et année academqiue>>");
       } finally {
         setLoading(false);
       }
     }
-
     load();
   }, [location.state]);
 
-  // ================= FILIERES =================
+  useEffect(() => {
+    const loadCotation = async () => {
+        if (!selectedSession?.id || !selectedSession?.semestre?.id || !selectedRow?.id) {
+            setCotation({});
+            return;
+        }
+
+        try {
+            const data = await cotationService.getByMentionSemestreAnneeSessionMentionSemestreEcue(
+                selectedMention?.id, selectedSession?.semestre?.id, param?.anneeId,selectedSession?.id,
+                selectedRow?.id);
+            setCotation(data);
+
+        } catch (error) {
+          console.error("Erreur lors du chargement de la note :", error);
+        }
+    };
+    loadCotation();
+  }, [visible, selectedSession, selectedRow, param?.anneeId]);
+
+  // ================= LOAD FILIERE BY DOMAINE =================
   useEffect(() => {
     if (!param.domaineId) return setFilieres([]);
 
-    filiereService
-      .getAllByDomaine(param.domaineId)
+    filiereService.getAllByDomaine(param.domaineId)
       .then(setFilieres)
       .catch(() => setFilieres([]));
   }, [param.domaineId]);
 
-  // ================= MENTIONS =================
+  // ================= LOAD MENTION BY FILIERE =================
   useEffect(() => {
     if (!param.filiereId) return setMentions([]);
 
-    mentionService
-      .getAllByFiliere(param.filiereId)
+    mentionService.getAllByFiliere(param.filiereId)
       .then(setMentions)
       .catch(() => setMentions([]));
   }, [param.filiereId]);
+
+   // ================= LOAD SESSIONS BY INCREMENTOR =================
+   useEffect(() => {
+     if (incrementor < 0) return setSessions([]);
+
+     sessionService
+       .getAllByMentionIncrementor(incrementor)
+       .then(setSessions)
+       .catch(() => setSessions([]));
+   }, [incrementor]);
 
   // ================= SELECT MENTION =================
   useEffect(() => {
@@ -140,78 +180,60 @@ export default function CotationList() {
     if (found) {
       setSelectedMention(found);
       setIncrementor(found.numeroSemestreIncementor || 0);
-
-      setParam(prev => ({
-        ...prev,
-        mentionFullName: [found?.niveau?.intitule, found?.intitule]
-          .filter(Boolean)
-          .join(" ")
-      }));
     }
   }, [mentions, param.mentionId]);
 
-  // ================= SESSIONS =================
-  useEffect(() => {
-    if (incrementor < 0) return setSessions([]);
-
-    sessionService
-      .getAllByMentionIncrementor(incrementor)
-      .then(setSessions)
-      .catch(() => setSessions([]));
-  }, [incrementor]);
-
-  // ================= ECUES =================
-  useEffect(() => {
-    if (!param.mentionId || !param.anneeId || !selectedSession?.semestre?.id) {
-      setEcues([]);
-      return;
-    }
-
-    let active = true;
-
-    (async () => {
-      try {
-        const data =
-          await mentionEcueDetailService.getAllByMentionSemestreAnnee(
-            param.mentionId,
-            selectedSession.semestre.id,
-            param.anneeId
-          );
-
-        if (active) setEcues(data || []);
-      } catch {
-        if (active) setEcues([]);
+  // ================= Load cotations by mentionId, anneeId et SemestreId =================
+    useEffect(() => {
+      if (!param.mentionId || !param.anneeId || !selectedSession?.semestre?.id) {
+        setCotations([]);
+        return;
       }
-    })();
 
-    return () => { active = false; };
-  }, [param.mentionId, param.anneeId, selectedSession?.semestre?.id]);
+      let active = true;
+
+      (async () => {
+        try {
+          const data = await cotationDetailService.getAllByMentionSemestreAnneeSession(
+              param.mentionId, selectedSession.semestre.id,
+              param.anneeId, selectedSession.id,
+            );
+
+          if (active) setCotations(data || []);
+        } catch {
+          if (active) setCotations([]);
+        }
+      })();
+
+      return () => { active = false; };
+    }, [param.mentionId, param.anneeId, selectedSession]);
 
   // ================= INSCRIPTIONS =================
   useEffect(() => {
     if (!param.anneeId || !param.mentionId) return setInscriptions([]);
 
     inscriptionService
-      .getAllByAnneeMention(param.anneeId, param.mentionId)
+      .getAllByAnneeMention(param?.anneeId, param?.mentionId)
       .then(setInscriptions)
       .catch(() => setInscriptions([]));
-  }, [param.anneeId, param.mentionId]);
+
+  }, [param?.anneeId, param?.mentionId]);
 
   // ================= HELPERS =================
   const normalize = (t) =>
     String(t || "")
       .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[\u0300-\u036f$]/g, "")
       .toLowerCase();
 
   const filteredData = useMemo(() => {
     const s = normalize(search);
 
-    return ecues.filter(r =>
-      normalize(`${r.ecueName} ${r?.ecue?.ue?.intitule}`)
+    return cotations.filter(c =>
+      normalize(`${c.mentionSemestreEcueDetail.ecueName} ${c?.mentionSemestreEcueDetail?.ecue?.ue?.intitule}`)
         .includes(s)
     );
-  }, [search, ecues]);
+  }, [search, cotations]);
 
   const groupedSessions = useMemo(() => {
     return (sessions || []).reduce((acc, item) => {
@@ -240,16 +262,13 @@ export default function CotationList() {
     setParam(p => ({
       ...p,
       mentionId: m.id,
-      mentionFullName: [m?.niveau?.intitule, m?.intitule]
-        .filter(Boolean)
-        .join(" ")
     }));
   };
 
   const handleSelectSession = (s) => setSelectedSession(s);
 
   const handleEdit = (row) => {
-    setSelectedEcue(row);
+    setSelectedRow(row.mentionSemestreEcueDetail);
     setVisible(true);
   };
 
@@ -262,13 +281,13 @@ export default function CotationList() {
         <CCardHeader className="bg-light py-3 px-4">
           <div className="d-flex justify-content-between">
             <div>
-              <h4 className="fw-bold mb-1">Liste des ecues</h4>
+              <h4 className="fw-bold mb-1">Liste des cotations</h4>
               <div className="text-medium-emphasis">
-                Gestion académique des ecues
+                Gestion académique des cotations
               </div>
             </div>
 
-            <div>{param.mentionFullName}</div>
+            <div>{selectedMention?.mentionName}</div>
           </div>
         </CCardHeader>
 
@@ -427,25 +446,39 @@ export default function CotationList() {
                         <CTableRow>
                           <CTableHeaderCell>ECUE</CTableHeaderCell>
                           <CTableHeaderCell>Crédit</CTableHeaderCell>
-                          <CTableHeaderCell>État</CTableHeaderCell>
                           <CTableHeaderCell className="text-end">Actions</CTableHeaderCell>
                         </CTableRow>
                       </CTableHead>
 
                       <CTableBody>
                         {filteredData.map((row, i) => (
-                          <CTableRow className="py-0" key={row.id || i}>
+                          <CTableRow className="py-0" key={row?.mentionSemestreEcueDetail?.id || i}>
                             <CTableDataCell className="py-0">
-                              <div className="fw-semibold">{row.ecueName}</div>
+                              <div className="fw-semibold">{row?.mentionSemestreEcueDetail?.ecueName}</div>
                               <small className="text-muted">{row?.ecue?.ue?.intitule}</small>
                             </CTableDataCell>
 
                             <CTableDataCell>
-                              <CBadge color="success">{row.credit}</CBadge>
-                            </CTableDataCell>
+                                <CRow>
+                                    <CCol>
+                                        <CBadge
+                                          className={`px-2 py-1 rounded-pill border border-2 ${
+                                            row?.estCote ? "border-success" : "border-danger"
+                                          }`}
+                                        >
+                                          <span className="fw-bold text-dark">
+                                            {row?.mentionSemestreEcueDetail?.credit ?? "-"}
+                                          </span>
+                                        </CBadge>
+                                     </CCol>
 
-                            <CTableDataCell>
-                              <CBadge color="info">{row.etat || "N/A"}</CBadge>
+                                      <CCol>
+                                        <CBadge color="info">
+                                            {row?.countWithCote || "0"} coté(s), {"  "}
+                                            {row?.countManqueCote || "0"} manque de cote(s)
+                                        </CBadge>
+                                      </CCol>
+                                    </CRow>
                             </CTableDataCell>
 
                             <CTableDataCell className="text-end">
@@ -473,13 +506,15 @@ export default function CotationList() {
         </CCardBody>
       </CCard>
 
-      {selectedEcue && (
-        <EditNoteModal
-          visible={visible}
-          setVisible={setVisible}
-          session={selectedSession}
-          row={selectedEcue}
-          inscriptions={inscriptions}
+      {selectedRow && (
+        <CotationEtudiantsModal
+          visible = {visible}
+          setVisible = {setVisible}
+          cotationService = {cotationService}
+          param={{anneeId: param?.anneeId, mention: selectedMention, session:selectedSession, cotation: cotation}}
+          row = {selectedRow}
+          inscriptions = {inscriptions}
+          onSubmit={handleModalSubmit}
         />
       )}
     </div>

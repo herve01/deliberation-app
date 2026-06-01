@@ -44,6 +44,11 @@ public class NiveauService implements IService<Niveau, String> {
         return repository.findAllByOrderByIsOldSystemAscOrdreAsc();
     }
 
+    @Override
+    public Long count() {
+        return repository.count();
+    }
+
     public List<Niveau> getAll(Boolean isOldSystem) {
         return repository.findAllByIsOldSystemOrderByOrdreAsc(isOldSystem);
     }
