@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "session")
 public class Session extends ModelBase {
     @ManyToOne
     @JoinColumn(name = "semestre_id")

@@ -169,16 +169,11 @@ const Table = ({
               placeholder="Rechercher..."
               value={search}
               onChange={(e) => {
-
                 setSearch(e.target.value);
-
                 setCurrentPage(1);
-
               }}
             />
-
           </CInputGroup>
-
         </div>
 
         {/* TABLE */}
@@ -230,21 +225,17 @@ const Table = ({
 
                 <CTableRow
                   key={row.id || i}>
-
                   {columns.map((col, j) => (
-
                     <CTableDataCell
                       key={col.accessor || j}>
                       {col.render
                         ? col.render(row)
                         : row[col.accessor] ?? "-"}
-
                     </CTableDataCell>
                   ))}
                 </CTableRow>
               ))
               ) : (
-
               <CTableRow>
                 <CTableDataCell
                   colSpan={columns.length}

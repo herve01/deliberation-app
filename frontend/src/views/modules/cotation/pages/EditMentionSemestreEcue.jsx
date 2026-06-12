@@ -34,10 +34,11 @@ import {
 import CIcon from "@coreui/icons-react";
 
 import mentionService from "@src/infrastructure/services/inscription/mentionService";
+import anneeService from "@src/infrastructure/services/inscription/anneeService";
 import semestreService from "@src/infrastructure/services/cotation/semestreService";
 import ecueService from "@src/infrastructure/services/cotation/ecueService";
 
-import mentionEcueDetailService from "@src/infrastructure/services/cotation/mentionEcueDetailService";
+import mentionSemestreEcueDetailService from "@src/infrastructure/services/cotation/mentionSemestreEcueDetailService";
 
 import { useToast } from "@src/app/context/ToastContext";
 
@@ -48,21 +49,20 @@ export default function EditMentionEcueDetail() {
 
   const { showToast } = useToast();
 
-  const dataToEdit =
-    location.state?.mentionEcueDetail;
+  const dataToEdit = location.state?.mentionEcueDetail;
 
   const [mentions, setMentions] = useState([]);
+  const [annees, setAnnees] = useState([]);
   const [semestres, setSemestres] = useState([]);
   const [ecues, setEcues] = useState([]);
 
-  const [selectedEcues, setSelectedEcues] =
-    useState([]);
+  const [selectedEcues, setSelectedEcues] = useState([]);
 
   const [form, setForm] = useState({
     mentionId: "",
     semestreId: "",
-    noteAnnee: "",
-    credit: "",
+    anneeId: "",
+    details:[]
   });
 
   const [loading, setLoading] = useState(true);
@@ -75,9 +75,10 @@ export default function EditMentionEcueDetail() {
   const isFormValid = () => {
 
     return (
-      form.mentionId &&
-      form.semestreId &&
-      selectedEcues.length > 0
+      form?.mentionId &&
+      form?.semestreId &&
+      form?.anneeId &&
+      form?.details.length > 0
     );
   };
 
@@ -92,40 +93,31 @@ export default function EditMentionEcueDetail() {
 
         setLoading(true);
 
-        const [
-          mentionData,
-          semestreData,
-          ecueData,
+        const [mentionData, semestreData, anneeData,
         ] = await Promise.all([
           mentionService.getAll(),
           semestreService.getAll(),
-          ecueService.getAll(),
+          anneeService.getAll(),
         ]);
 
         setMentions(mentionData || []);
         setSemestres(semestreData || []);
-        setEcues(ecueData || []);
+        setAnnees(anneeData || []);
 
         // MODE EDIT
         if (dataToEdit) {
 
           setForm({
-            mentionId:
-              dataToEdit.mentionId || "",
+            mentionId: dataToEdit.mentionId || "",
 
-            semestreId:
-              dataToEdit.semestreId || "",
+            semestreId: dataToEdit?.semestreId || "",
 
-            noteAnnee:
-              dataToEdit.noteAnnee || "",
-
-            credit:
-              dataToEdit.credit || "",
+            anneeId: dataToEdit?.anneeId || "",
           });
 
-          setSelectedEcues([
+          /*setSelectedEcues([
             dataToEdit.ecueId,
-          ]);
+          ]);*/
         }
 
       } catch (e) {
@@ -161,14 +153,11 @@ export default function EditMentionEcueDetail() {
   const handleEcueChange = (ecueId) => {
 
     setSelectedEcues((prev) => {
-
       if (prev.includes(ecueId)) {
-
         return prev.filter(
           (id) => id !== ecueId
         );
       }
-
       return [...prev, ecueId];
     });
   };
@@ -179,17 +168,14 @@ export default function EditMentionEcueDetail() {
     e.preventDefault();
 
     if (!isValid) return;
-
     try {
-
       setSaving(true);
-
       setError("");
 
       // MODE EDIT
       if (dataToEdit) {
 
-        await mentionEcueDetailService.update(
+        await mentionSemestreEcueDetailService.update(
           dataToEdit.id,
           {
             ...form,
@@ -212,9 +198,9 @@ export default function EditMentionEcueDetail() {
 
           selectedEcues.map((ecueId) =>
 
-            mentionEcueDetailService.add({
-              mentionId:
-                form.mentionId,
+            mentionSemestreEcueDetailService.add({
+              mentionSemestreEcueId:
+                form.mentionSemestreEcueId,
 
               semestreId:
                 form.semestreId,
@@ -412,7 +398,6 @@ export default function EditMentionEcueDetail() {
                       </option>
 
                     ))}
-
                   </CFormSelect>
 
                 </CInputGroup>
@@ -442,15 +427,12 @@ export default function EditMentionEcueDetail() {
               >
 
                 <CRow>
-
                   {ecues.map((ecue) => (
-
                     <CCol
                       md={6}
                       key={ecue.id}
                       className="mb-2"
                     >
-
                       <CFormCheck
                         checked={selectedEcues.includes(
                           ecue.id
@@ -576,15 +558,10 @@ export default function EditMentionEcueDetail() {
               >
                 Annuler
               </CButton>
-
             </div>
-
           </CForm>
-
         </CCardBody>
-
       </CCard>
-
     </div>
   );
 }

@@ -2,6 +2,7 @@ package com.deliberation.controller.cotation;
 
 import com.deliberation.dto.cotation.SemestreDTO;
 import com.deliberation.model.cotation.Semestre;
+import com.deliberation.model.cotation.Session;
 import com.deliberation.model.inscription.Niveau;
 import com.deliberation.service.cotation.SemestreService;
 import com.deliberation.service.inscription.NiveauService;
@@ -39,6 +40,17 @@ public class SemestreController {
     public List<Semestre> all() {
         logger.info("[SemestreController] GET /api/semestres - Récupération de tous les semestres");
         return service.getAll();
+    }
+
+    @GetMapping("/semestre-numero-incrementor/{incrementor}")
+    @Operation(
+            summary = "Lister les sessions",
+            description = "Retourne la liste complète des sessions"
+    )
+    @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
+    public List<Semestre> all(@PathVariable Integer incrementor) {
+        logger.info("[SemestreController] GET /api/semestres - Récupération de toutes les sessions");
+        return service.getAllWithout(incrementor);
     }
 
     @GetMapping("/{id}")

@@ -24,5 +24,7 @@ export default {
 
   getAllByAnneeMentionSesmestreSession: (anneeId, mentionId, semestreId, sessionId) => api.getAll(entity, { path: `annee/${anneeId}/mention/${mentionId}/semestre/${semestreId}/session/${sessionId}/deliberation`}),
 
-  getAllByAnneeMentionSesmestreSessionWith: (anneeId, mentionId, semestreId, sessionId) => api.getAll(entity, { path: `annee/${anneeId}/mention/${mentionId}/semestre/${semestreId}/session/${sessionId}/traitement`}),
+  getAllByAnneeMentionSesmestreSessionWith: (anneeId, mentionId, semestreId, sessionId) => api.getAll(entity, { path: `annee/${anneeId}/mention/${mentionId}/semestre/${semestreId}/session/${sessionId}/details`}),
+
+    getDetailByInscriptionSesmestreSession: (inscriptionId, semestreId, sessionId) => api.get(entity, { path: `inscription/${inscriptionId}/semestre/${semestreId}/session/${sessionId}/details`}),
 };

@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "etudiant")
 public class Etudiant extends ModelBase {
     private String matricule;
     private String nom;

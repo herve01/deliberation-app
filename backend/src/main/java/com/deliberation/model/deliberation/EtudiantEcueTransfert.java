@@ -9,7 +9,7 @@ import com.deliberation.model.inscription.Etudiant;
 import jakarta.persistence.*;
 
 @Entity
-//@Table(name = "etudiant")
+@Table(name = "etudiant_ecue_transfert")
 public class EtudiantEcueTransfert extends ModelBase {
     @ManyToOne
     @JoinColumn(name = "cotation_id")

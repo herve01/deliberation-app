@@ -20,7 +20,7 @@ public class ChargeHorairePersonnelService implements IService<ChargeHorairePers
 
     @Override
     public ChargeHorairePersonnel create(ChargeHorairePersonnel instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 

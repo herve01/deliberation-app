@@ -8,7 +8,7 @@ import com.deliberation.model.inscription.Mention;
 import jakarta.persistence.*;
 
 @Entity
-//@Table(name = "etudiant")
+@Table(name = "jury_membre_detail")
 public class JuryMembreDetail extends ModelBase {
 
     @ManyToOne

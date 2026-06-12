@@ -4,13 +4,10 @@ import com.deliberation.dto.inscription.CycleDTO;
 import com.deliberation.dto.inscription.MentionDTO;
 import com.deliberation.dto.inscription.NiveauDTO;
 import com.deliberation.model.ModelBase;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 
 @Entity
-//@Table(name = "niveau")
+@Table(name = "niveau")
 public class Niveau extends ModelBase {
     private String intitule;
     private Integer ordre;

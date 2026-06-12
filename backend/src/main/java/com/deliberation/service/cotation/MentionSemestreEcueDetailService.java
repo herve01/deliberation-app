@@ -1,5 +1,6 @@
 package com.deliberation.service.cotation;
 
+import com.deliberation.model.cotation.MentionSemestreEcue;
 import com.deliberation.model.cotation.MentionSemestreEcueDetail;
 import com.deliberation.repository.cotation.CotationDetailRepository;
 import com.deliberation.repository.cotation.MentionSemestreEcueDetailRepository;
@@ -8,6 +9,7 @@ import com.deliberation.service.IService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,7 +52,7 @@ public class MentionSemestreEcueDetailService implements IService<MentionSemestr
     }
 
     public List<MentionSemestreEcueDetail> getAll(String mentionId) {
-        return repository.findByMentionSemestreId(mentionId);
+        return repository.findByMentionSemestreIdOrderByUe(mentionId);
     }
 
     /*public List<MentionSemestreEcueDetail> getAll(String mentionId, String semestreId, String anneeId) {
@@ -66,5 +68,14 @@ public class MentionSemestreEcueDetailService implements IService<MentionSemestr
 
     public Float sum(String mentionSemestreId) {
         return repository.sumCreditByMentionSemestreId(mentionSemestreId);
+    }
+
+    public Float sum(List<MentionSemestreEcue> mentionSemestres) {
+        return (float) mentionSemestres.stream()
+                .map(MentionSemestreEcue::getId)
+                .map(repository::sumCreditByMentionSemestreId)
+                .filter(Objects::nonNull)
+                .mapToDouble(Float::doubleValue)
+                .sum();
     }
 }

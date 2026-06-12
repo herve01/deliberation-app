@@ -365,25 +365,22 @@ export default function InscriptionList() {
           )}
 
           {/* INFOS */}
-          <div>
-
-            <div className="fw-semibold">
+          <div className="d-flex flex-column">
+            <span className="fw-semibold">
               {[
                 row?.etudiant?.nom?.toUpperCase(),
                 row?.etudiant?.postnom?.toUpperCase(),
-                row?.etudiant?.prenom,
+                row?.etudiant?.prenom?.toUpperCase(),
               ]
                 .filter(Boolean)
                 .join(" ")}
+            </span>
 
-              <small className="text-medium-emphasis">
-                {" "}
-                ● {row?.etudiant?.sexe}
-              </small>
-            </div>
             <small className="text-medium-emphasis">
-              {row?.date
-                ? new Date(row.date).toLocaleDateString("fr-FR") : "-"}
+              Né(e) le{" "}
+              {row?.etudiant?.dateNaissance
+                ? new Date(row.etudiant.dateNaissance).toLocaleDateString("fr-FR")
+                : "-"}, {row?.etudiant?.sexe ?? "-"}
             </small>
           </div>
         </div>
@@ -391,16 +388,11 @@ export default function InscriptionList() {
     },
 
     {
-      header: "Nouvel",
-      accessor: "estNouvelle",
+      header: "Date Inscription",
+      accessor: "date",
 
       render: (row) => (
-        <CBadge
-          color={ row?.estNouvelle ? "success" : "info"}
-          shape="rounded-pill"
-        >
-          {row?.estNouvelle ? "OUI" : "NON"}
-        </CBadge>
+          new Date(row?.date).toLocaleDateString("fr-FR")
       ),
     },
 
@@ -577,20 +569,11 @@ export default function InscriptionList() {
               <CCard className="shadow-sm h-100">
                 <CCardBody className="p-3">
                   {/* TOP */}
-                  <div className="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-0">
+                  <div className="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-0 px-3 mb-2">
                     <div>
-                      {param?.mentionFullName && (
-                        <CBadge
-                          color="primary"
-                          shape="rounded-pill"
-                          className="px-3 py-2"
-                        >
-                          {param.mentionFullName}
-                        </CBadge>
-                      )}
 
-                      <div className="small text-medium-emphasis mt-1">
-                        {filteredData.length} étudiant(s)
+                      <div className="small text-medium-emphasis mt-2">
+                        {filteredData.length} étudiant(s) | <strong>{param?.mentionFullName}</strong>
                       </div>
 
                     </div>
@@ -617,7 +600,7 @@ export default function InscriptionList() {
 
                   {/* CONTENT */}
                   {loading ? (
-                    <div className="text-center py-5">
+                    <div className="text-center py-5 px-3">
                       <CSpinner color="primary" />
                     </div>
                   ) : error ? (

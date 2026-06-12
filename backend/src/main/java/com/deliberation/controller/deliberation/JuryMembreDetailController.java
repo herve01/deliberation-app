@@ -3,6 +3,8 @@ package com.deliberation.controller.deliberation;
 import com.deliberation.dto.deliberation.JuryMembreDetailDTO;
 import com.deliberation.model.deliberation.Personnel;
 import com.deliberation.model.deliberation.JuryMembreDetail;
+import com.deliberation.model.deliberation.pojo.DeliberationMentionPojo;
+import com.deliberation.model.deliberation.pojo.MembreJuryMentionPojo;
 import com.deliberation.model.inscription.AnneeAcademique;
 import com.deliberation.model.inscription.Mention;
 import com.deliberation.service.deliberation.PersonnelService;
@@ -18,10 +20,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/mention_jury_membre_details")
+@RequestMapping("/api/jury_membre_details")
 public class JuryMembreDetailController {
 
     private final JuryMembreDetailService service;
@@ -111,6 +115,46 @@ public class JuryMembreDetailController {
                 .body(created);
     }
 
+    @PostMapping("/add_all")
+    @Operation(
+            summary = "Créer un détail jury-mention",
+            description = "Crée une nouvelle affectation entre jury et année académique"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Détail créé"),
+            @ApiResponse(responseCode = "400", description = "Requête invalide")
+    })
+    public ResponseEntity<List<JuryMembreDetail>> createAll(@RequestBody List<JuryMembreDetailDTO> dtos) {
+
+        logger.info("[MentionJuryMembreDetailController] POST /api/mention_jury_membre_details - Création");
+
+        List<JuryMembreDetail> instances = new ArrayList<>();
+
+        dtos.forEach(dto ->{
+            var mention = mentionService.get(dto.mentionId)
+                    .orElseThrow(() -> new IllegalArgumentException("Mention introuvable"));
+
+            var personnel = personnelService.get(dto.personnelId)
+                    .orElseThrow(() -> new IllegalArgumentException("Jury introuvable"));
+
+            var annee = anneeService.get(dto.anneeId)
+                    .orElseThrow(() -> new IllegalArgumentException("Année académique introuvable"));
+
+            var instance = new JuryMembreDetail();
+            instance.fromDTO(dto, mention, personnel, annee);
+
+            instances.add(instance);
+        });
+
+        var created = service.createAll(instances);
+
+        logger.info("[MentionJuryMembreDetailController] Détail créé avec succès - ID: {}", created.stream().count());
+
+        return ResponseEntity
+                .created(URI.create("/api/mention_jury_membre_details/" + created.stream().count()))
+                .body(created);
+    }
+
     @PutMapping("/{id}")
     @Operation(
             summary = "Mettre à jour un détail jury-mention",
@@ -188,5 +232,49 @@ public class JuryMembreDetailController {
         logger.info("[MentionJuryMembreDetailController] Détail {} supprimé avec succès", id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/annee/{anneeId}/mention/{mentionId}/details")
+    @Operation(summary = "Lister les membres du jury par année et mention")
+    public ResponseEntity<MembreJuryMentionPojo> getByAnneeMention(
+            @PathVariable String anneeId, @PathVariable String mentionId) {
+
+        logger.info("[DeliberationDetailController] GET /api/jury_membre_details/annee/{}/mention/{}/details",
+                anneeId, mentionId);
+
+        var annee = anneeService.get(anneeId).orElse(null);
+
+        return mentionService.get(mentionId)
+            .map(mention -> {
+                var jury = new MembreJuryMentionPojo();
+                var details = service.getAll(anneeId, mention.getId());
+                jury.setMention(mention);
+                jury.setAnnee(annee);
+                jury.setDetails(details);
+
+                return ResponseEntity.ok(jury);
+            })
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/annee/{anneeId}/details")
+    @Operation(summary = "Lister les membres du jury par année")
+    public List<MembreJuryMentionPojo> getAllByAnnee(@PathVariable String anneeId) {
+
+        logger.info("[DeliberationDetailController] GET /api/jury_membre_details/annee/{}/details", anneeId);
+
+        var annee = anneeService.get(anneeId).orElse(null);
+
+        return mentionService.getAll()
+            .stream()
+            .map(mention -> {
+                var jury = new MembreJuryMentionPojo();
+                jury.setMention(mention);
+                jury.setAnnee(annee);
+                jury.setDetails(service.getAll(anneeId, mention.getId()));
+
+                return jury;
+            })
+            .toList();
     }
 }

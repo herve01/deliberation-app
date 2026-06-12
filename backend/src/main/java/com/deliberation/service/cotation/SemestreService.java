@@ -1,6 +1,7 @@
 package com.deliberation.service.cotation;
 
 import com.deliberation.model.cotation.Semestre;
+import com.deliberation.model.cotation.Session;
 import com.deliberation.model.inscription.Domaine;
 import com.deliberation.repository.cotation.SemestreRepository;
 import com.deliberation.repository.inscription.DomaineRepository;
@@ -50,5 +51,19 @@ public class SemestreService implements IService<Semestre, String> {
     @Override
     public Long count() {
         return repository.count();
+    }
+
+    public List<Semestre> getAllWithout(Integer incrementor) {
+        var data = repository.findAllByOrderByNumeroAsc();
+
+        if(incrementor > 0)
+            data.forEach(s -> {
+                int numeroSemestre = s.getNumero(); // 1,2 ou 7,8 etc.
+                int normalized = (numeroSemestre - 1) % 2;
+
+                s.setNumero(normalized + 1 + (incrementor * 2));
+            });
+
+        return data;
     }
 }

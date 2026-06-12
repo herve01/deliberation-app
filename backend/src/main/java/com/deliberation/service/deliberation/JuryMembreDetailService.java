@@ -20,8 +20,19 @@ public class JuryMembreDetailService implements IService<JuryMembreDetail, Strin
 
     @Override
     public JuryMembreDetail create(JuryMembreDetail instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
+    }
+
+    public List<JuryMembreDetail> createAll(List<JuryMembreDetail> instances) {
+
+        if (instances != null && !instances.isEmpty()) {
+            instances.forEach(instance -> {
+                if(instance.getId().isEmpty())
+                    instance.setId(UUID.randomUUID().toString().replace("-", ""));
+            });
+        }
+        return repository.saveAll(instances);
     }
 
     @Override
@@ -43,6 +54,10 @@ public class JuryMembreDetailService implements IService<JuryMembreDetail, Strin
     @Override
     public List<JuryMembreDetail> getAll() {
         return repository.findAll();
+    }
+
+    public List<JuryMembreDetail> getAll(String anneeId, String mentionId) {
+        return repository.findByAnneeIdAndMentionId(anneeId, mentionId);
     }
 
     @Override

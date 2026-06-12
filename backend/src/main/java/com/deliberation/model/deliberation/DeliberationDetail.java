@@ -8,7 +8,7 @@ import com.deliberation.model.inscription.Inscription;
 import jakarta.persistence.*;
 
 @Entity
-//@Table(name = "etudiant")
+@Table(name = "deliberation_detail")
 public class DeliberationDetail extends ModelBase implements Cloneable {
 
     @ManyToOne
@@ -53,6 +53,7 @@ public class DeliberationDetail extends ModelBase implements Cloneable {
 
     public void setCredits(Float credits) {
         this.credits = credits;
+        recalculateTransferes();
     }
 
     public Float getValides() {
@@ -61,6 +62,7 @@ public class DeliberationDetail extends ModelBase implements Cloneable {
 
     public void setValides(Float valides) {
         this.valides = valides;
+        recalculateTransferes();
     }
 
     public Float getTransferes() {
@@ -78,18 +80,22 @@ public class DeliberationDetail extends ModelBase implements Cloneable {
     public void setMoyenne(Float moyenne) {
         this.moyenne = moyenne;
 
-        if(moyenne < 10)
-            decision = MentionType.DEFAILLANT;
-        else if (moyenne < 12)
-            decision = MentionType.PASSABLE;
-        else if (moyenne < 14)
-            decision = MentionType.ASSEZ_BIEN;
-        else if (moyenne < 16)
-            decision = MentionType.BIEN;
-        else if (moyenne < 18)
-            decision = MentionType.TRES_BIEN;
-        else
-            decision = MentionType.EXCELLENT;
+        if(getId() == null || getId().isBlank()) {
+            setaEchoue(false);
+            if (moyenne < 10) {
+                decision = MentionType.DEFAILLANT;
+                setaEchoue(true);
+            } else if (moyenne < 12)
+                decision = MentionType.PASSABLE;
+            else if (moyenne < 14)
+                decision = MentionType.ASSEZ_BIEN;
+            else if (moyenne < 16)
+                decision = MentionType.BIEN;
+            else if (moyenne < 18)
+                decision = MentionType.TRES_BIEN;
+            else
+                decision = MentionType.EXCELLENT;
+        }
     }
 
     public MentionType getDecision() {
@@ -150,5 +156,14 @@ public class DeliberationDetail extends ModelBase implements Cloneable {
         if(inscription != null)
             setInscription(inscription);
 
+    }
+
+    private void recalculateTransferes() {
+        if(!(getId() == null || getId().isBlank()))
+            return;
+
+        float c = credits != null ? credits : 0F;
+        float v = valides != null ? valides : 0F;
+        this.transferes = c - v;
     }
 }

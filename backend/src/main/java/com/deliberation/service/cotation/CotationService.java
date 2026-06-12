@@ -128,13 +128,16 @@ public class CotationService implements IService<Cotation, String> {
 
     public Optional<Cotation> get(String anneeId, String mentionId, String semestreId, String sessionId) {
 
-        return repository.findOneByAnneeIdAndMentionIdAndSemestreIdAndSessionId(anneeId, mentionId, semestreId, sessionId)
-                ;
+        return repository.findOneByAnneeIdAndMentionIdAndSemestreIdAndSessionId(anneeId, mentionId, semestreId, sessionId);
     }
 
     @Override
     public List<Cotation> getAll() {
         return repository.findAll();
+    }
+
+    public List<Cotation> getAll(String anneeId, String mentionId) {
+        return repository.findByMentionIdAndAnneeId(mentionId, anneeId);
     }
 
     @Override

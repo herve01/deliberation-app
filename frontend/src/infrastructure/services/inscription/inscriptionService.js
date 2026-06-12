@@ -25,7 +25,9 @@ export default {
     // GET /liste/{type}/{id}
     getAllByTypeId: (type, id) => api.getAll(entity, { path: `liste/${type}/${id}`,}),
 
-    // GET /annee/{anneeId}/mention/{mentionId}
+    // GET /mention/{mentionId}/annee/{anneeId}/semestre/{semestreId}/session/{sessionId}
+    getAllByMentionAnneeSemestreSession: (mentionId, anneeId, semestreId, sessionId) => api.getAll(entity, {path: `mention/${mentionId}/annee/${anneeId}/semestre/${semestreId}/session/${sessionId}`,}),
+
     getAllByAnneeMention: (anneeId, mentionId) => api.getAll(entity, {path: `annee/${anneeId}/mention/${mentionId}`,}),
 
     // GET /etudiant/{etudiantId}/annee/{anneeId}

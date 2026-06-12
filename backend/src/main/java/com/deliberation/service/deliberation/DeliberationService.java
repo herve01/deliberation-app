@@ -25,7 +25,7 @@ public class DeliberationService implements IService<Deliberation, String> {
 
     @Override
     public Deliberation create(Deliberation instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 
@@ -71,9 +71,20 @@ public class DeliberationService implements IService<Deliberation, String> {
         return repository.findById(id);
     }
 
+    public Optional<Deliberation> get(String mentionId, String semestreId, String anneeId, String sessionId ) {
+        return repository.findOneByMentionIdAndSemestreIdAndAnneeIdAndSessionId(mentionId, semestreId, anneeId, sessionId);
+    }
+
     @Override
     public List<Deliberation> getAll() {
         return repository.findAll();
+    }
+
+    public List<Deliberation> getAll(String mentionId, String semestreId, String anneeId, String sessionId) {
+        return semestreId.trim().equals("-1") ?
+            repository.findByMentionIdAndAnneeId(mentionId, anneeId)
+            : List.of(repository.findOneByMentionIdAndSemestreIdAndAnneeIdAndSessionId(
+                    mentionId, semestreId, anneeId, sessionId).get());
     }
 
     @Override

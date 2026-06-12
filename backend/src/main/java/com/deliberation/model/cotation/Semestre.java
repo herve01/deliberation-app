@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
-//@Table(name = "semestre")
+@Table(name = "semestre")
 public class Semestre extends ModelBase {
 
     private Integer numero;
@@ -31,5 +31,11 @@ public class Semestre extends ModelBase {
     public String getSemestreName()
     {
         return String.format("Semestre %s", numero);
+    }
+
+    @JsonProperty(value = "shortName", access = JsonProperty.Access.READ_ONLY)
+    public String getShortName()
+    {
+        return String.format("S%s", numero);
     }
 }

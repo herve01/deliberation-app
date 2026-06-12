@@ -116,12 +116,9 @@ export default function EcueList() {
       header: "UE",
       accessor: "ueId",
       render: (row) => (
-        <CBadge
-          color="info"
-          shape="rounded-pill"
-        >
-          {row.ueId || "-"}
-        </CBadge>
+          <div className="fw-semibold">
+              {row?.ue?.intitule || "-"}
+           </div>
       ),
     },
 

@@ -14,4 +14,6 @@ public interface JuryMembreDetailRepository extends JpaRepository<JuryMembreDeta
     List<JuryMembreDetail> findByPersonnelId(String personnelId);
 
     List<JuryMembreDetail> findByAnneeIdAndRole(String anneeId, String role);
+
+    List<JuryMembreDetail> findByAnneeIdAndMentionId(String anneeId, String mentionId);
 }

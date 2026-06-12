@@ -16,7 +16,7 @@ import {
   cilLibrary,
   cilEducation,
   cilSearch,
-  cilViewStream,
+  cilInfo,
 } from "@coreui/icons";
 
 import CIcon from "@coreui/icons-react";
@@ -27,10 +27,9 @@ import mentionService from "@src/infrastructure/services/inscription/mentionServ
 import anneeService from "@src/infrastructure/services/inscription/anneeService";
 import sessionService from "@src/infrastructure/services/cotation/sessionService";
 
-import cotationDetailService from "@src/infrastructure/services/cotation/cotationDetailService";
 import deliberationDetailService from "@src/infrastructure/services/deliberation/deliberationDetailService";
-
 import CotationEtudiantModalDetails from "@src/views/modules/deliberation/pages/modal/CotationEtudiantModalDetails";
+import juryMembreDetailService from "@src/infrastructure/services/deliberation/juryMembreDetailService";
 
 const STORAGE = {
   anneeId: "anneeIdStored",
@@ -53,12 +52,15 @@ export default function DeliberationList() {
   const [annees, setAnnees] = useState([]);
   const [sessions, setSessions] = useState([]);
 
-  const [cotation, setCotation] = useState({});
+  const [deliberationDetails, setDeliberationDetails] = useState({ });
+  const [juryMembre, setJuryMembre] = useState(null);
 
   const [selectedMention, setSelectedMention] = useState(null);
   const [selectedSession, setSelectedSession] = useState(
     JSON.parse(localStorage.getItem(STORAGE.session) || "null")
   );
+
+  const [selectedDeliberation,setSelectedDeliberation] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -112,7 +114,7 @@ export default function DeliberationList() {
 
   useEffect(() => {
     const loadDeliberation = async () => {
-      if (!param?.anneeId || !selectedMention || !selectedSession?.id) {
+      if (!param?.anneeId || !selectedMention?.id || !selectedSession?.id) {
         setDeliberations([]);
         return;
       }
@@ -124,6 +126,8 @@ export default function DeliberationList() {
 
           setDeliberations(data);
 
+          console.log('test session', selectedSession);
+
       } catch (error) {
         console.error("Erreur lors du chargement de la liste de déliberation :", error);
         setDeliberations([]);
@@ -132,7 +136,29 @@ export default function DeliberationList() {
 
     loadDeliberation();
 
-  }, [param?.anneeId, selectedMention, selectedSession]);
+  }, [param?.anneeId, selectedMention?.id, selectedSession]);
+
+  useEffect(() => {
+      const loadJuryMembre = async () => {
+        if (!param?.anneeId || !selectedMention?.id) {
+          setJuryMembre({});
+          return;
+        }
+
+        try {
+            const data = await juryMembreDetailService.getByAnneeMention(param?.anneeId, selectedMention?.id);
+
+            setJuryMembre(data);
+
+        } catch (error) {
+          console.error("Erreur lors du chargement de la liste de déliberation :", error);
+          setJuryMembre({});
+        }
+      };
+
+      loadJuryMembre();
+
+    }, [param?.anneeId, selectedMention?.id]);
 
 
   // ================= FILIERES =================
@@ -157,7 +183,7 @@ export default function DeliberationList() {
 
   // ================= SELECT MENTION =================
   useEffect(() => {
-    const found = mentions.find(m => String(m.id) === String(param.mentionId));
+    const found = mentions.find(m => String(m.id) === String(param?.mentionId));
 
     if (found) {
       setSelectedMention(found);
@@ -168,17 +194,30 @@ export default function DeliberationList() {
         mentionId : found.id
       }));
     }
-  }, [mentions, param.mentionId]);
+  }, [mentions, param?.mentionId]);
 
   // ================= SESSIONS =================
-  useEffect(() => {
-    if (incrementor < 0) return setSessions([]);
+useEffect(() => {
+  if (incrementor < 0) {
+    setSessions([]);
+    return;
+  }
 
-    sessionService
-      .getAllByWithoutMentionIncrementor(incrementor)
-      .then(setSessions)
-      .catch(() => setSessions([]));
-  }, [incrementor]);
+  sessionService
+    .getAllByWithoutMentionIncrementor(incrementor)
+    .then((data) => {
+      const defaultSession = {
+          id: "-1",
+          semestre: {
+            id: "-1",
+            numero: 3,
+          },
+          numero: 3,
+      };
+      setSessions([...data, defaultSession]);
+    })
+    .catch(() => setSessions([]));
+}, [incrementor]);
 
   // ================= HELPERS =================
   const normalize = (t) =>
@@ -198,7 +237,7 @@ export default function DeliberationList() {
 
   const groupedSessions = useMemo(() => {
     return (sessions || []).reduce((acc, item) => {
-      const key = item?.semestre?.semestreName || "Autres";
+      const key = item?.semestre?.semestreName || "TOUT";
       if (!acc[key]) acc[key] = [];
       acc[key].push(item);
       return acc;
@@ -229,9 +268,35 @@ export default function DeliberationList() {
   const handleSelectSession = (s) => setSelectedSession(s);
 
   const handleEdit = (row) => {
-    setSelectedEcue(row);
+    setSelectedDeliberation(row);
     setVisible(true);
   };
+
+    useEffect(() => {
+      const loadDeliberationDetaitls = async () => {
+
+        if (!selectedDeliberation || !selectedSession?.id) {
+          setDeliberationDetails({});
+          return;
+        }
+
+        try {
+            var data = deliberationDetailService.
+            getDetailByInscriptionSesmestreSession(selectedDeliberation.inscription.id,
+                selectedSession?.semestre?.id, selectedSession?.id)
+                  .then((data) => {
+                    setDeliberationDetails(data);
+                  });
+
+        } catch (error) {
+          console.error("Erreur lors du chargement de la liste de déliberation :", error);
+         setDeliberationDetails({});
+        }
+      };
+
+      loadDeliberationDetaitls();
+
+    }, [visible, selectedDeliberation, selectedSession ]);
 
   // ================= RENDER =================
   return (
@@ -286,7 +351,7 @@ export default function DeliberationList() {
               getValue: (f) => f.id,
             },
           ].map((field) => (
-            <CCol key={field.label} xs={12} sm={6} md={4}>
+            <CCol key={field.label} xs={12} sm={6} md={4} className="px-2">
               <CInputGroup>
                 <CInputGroupText>
                   <CIcon icon={field.icon} />
@@ -338,7 +403,7 @@ export default function DeliberationList() {
                               className="mb-1 py-1"
                               style={{ cursor: "hand" }}
                             >
-                              {item.sessionName}
+                              {item.sessionName || "Semestre"}
                             </CListGroupItem>
                           ))}
                         </CListGroup>
@@ -412,7 +477,7 @@ export default function DeliberationList() {
                             <CTableHeaderCell>Transférés</CTableHeaderCell>
                             <CTableHeaderCell>Moyenne</CTableHeaderCell>
                             <CTableHeaderCell>Décision</CTableHeaderCell>
-                            <CTableHeaderCell className="text-end">Actions</CTableHeaderCell>
+                            <CTableHeaderCell className="text-end"></CTableHeaderCell>
                         </CTableRow>
                       </CTableHead>
 
@@ -458,23 +523,23 @@ export default function DeliberationList() {
                             </CTableDataCell>
 
                             <CTableDataCell>
-                                <div className="fw-semibold">{row?.credits ?? "-"}</div>
+                                <div className="fw-semibold">{row?.deliberation?.credits ?? "-"}</div>
                             </CTableDataCell>
 
                             <CTableDataCell>
-                                <div className="fw-semibold">{row?.valides ?? "-"}</div>
+                                <div className="fw-semibold">{row?.deliberation?.valides ?? "-"}</div>
                             </CTableDataCell>
 
                             <CTableDataCell>
-                                <div className="fw-semibold">{row?.transferts ?? "-"}</div>
+                                <div className="fw-semibold">{row?.deliberation?.transferes ?? "-"}</div>
                             </CTableDataCell>
 
                             <CTableDataCell>
-                                <div className="fw-semibold">{row?.moyenne ?? "-"}</div>
+                                <div className="fw-semibold">{row?.deliberation?.moyenne ?? "-"}</div>
                             </CTableDataCell>
 
                             <CTableDataCell>
-                                <div className="fw-semibold">{row?.decision ?? "-"}</div>
+                                <div className="fw-semibold">{row?.deliberation?.decision ?? "-"}</div>
                             </CTableDataCell>
 
                             <CTableDataCell className="text-end">
@@ -484,7 +549,7 @@ export default function DeliberationList() {
                                      size="sm"
                                      onClick={() => handleEdit(row)}
                                      >
-                                     <CIcon icon={cilViewStream} />
+                                     <CIcon icon={cilInfo} />
                                    </CButton>
                                </div>
                             </CTableDataCell>
@@ -494,15 +559,25 @@ export default function DeliberationList() {
                     </CTable>
                      </div>
                   )}
-
                 </CCardBody>
               </CCard>
             </CCol>
-
           </CRow>
         </CCardBody>
       </CCard>
 
+           {selectedDeliberation && (
+              <CotationEtudiantModalDetails
+                visible = {visible}
+                setVisible = {setVisible}
+                deliberation = {deliberationDetails}
+                param={{anneeId: param?.anneeId,
+                    mention: selectedMention,
+                    session:selectedSession,
+                    juryMembre : juryMembre
+                    }}
+              />
+            )}
     </div>
   );
 }

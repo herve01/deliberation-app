@@ -5,7 +5,7 @@ import com.deliberation.model.ModelBase;
 import jakarta.persistence.*;
 
 @Entity
-//@Table(name = "filiere")
+@Table(name = "filiere")
 public class Filiere extends ModelBase {
     private String intitule;
 

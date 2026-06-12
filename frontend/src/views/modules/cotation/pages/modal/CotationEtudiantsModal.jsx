@@ -96,7 +96,7 @@ export default function CotationEtudiantsModal({
   const handleChange = (id, value) => {
     let v = value === "" ? "" : Number(value);
 
-    if (v !== "" && v > 20) v = 20;
+    if (v !== "" && v > 10) v = 10;
     if (v !== "" && v < 0) v = 0;
 
     setData((prev) => ({
@@ -184,7 +184,7 @@ export default function CotationEtudiantsModal({
         >
           <CModalTitle className="fw-bold d-flex align-items-center">
             <CIcon icon={cilPen} className="me-2" />
-            Saisie des param?.cotation
+            Saisie des notes
           </CModalTitle>
         </CModalHeader>
 
@@ -240,7 +240,7 @@ export default function CotationEtudiantsModal({
               >
                 <CRow>
                   <CCol md={8}>Étudiant</CCol>
-                  <CCol className="text-center" md={4}>note /20</CCol>
+                  <CCol className="text-center" md={4}>Note /10</CCol>
                 </CRow>
               </div>
 
@@ -300,9 +300,9 @@ export default function CotationEtudiantsModal({
                           <CFormInput
                             type="number"
                             min={0}
-                            max={20}
+                            max={10}
                             step="0.01"
-                            placeholder="0 - 20"
+                            placeholder="0 - 10"
                             value={getcote(item?.id) ?? ""}
                             onChange={(e) =>
                               handleChange(item?.id, e.target.value)

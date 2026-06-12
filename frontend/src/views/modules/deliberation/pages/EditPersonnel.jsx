@@ -33,6 +33,7 @@ import {
   cilBirthdayCake,
     cilSave,
     cilXCircle,
+    cilBadge,
     cilPeople,
 } from "@coreui/icons";
 
@@ -40,7 +41,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 import { isValidName, isValidPhone } from "@src/shared/validators";
 
-import inscriptionService from "@src/infrastructure/services/inscription/inscriptionService";
+import personnelService from "@src/infrastructure/services/deliberation/personnelService";
 import paysService from "@src/infrastructure/services/setting/paysService";
 
 import { useToast } from "@src/app/context/ToastContext";
@@ -49,8 +50,6 @@ export default function EditInscription() {
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();
-
-  const fileInputRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -61,7 +60,7 @@ export default function EditInscription() {
   const today = new Date();
   const formattedDate = today.toLocaleDateString("fr-FR");
 
-  const inscriptionToEdit = location.state?.inscription;
+  const personnelToEdit = location.state?.personnel;
   const param = location.state?.param || {};
 
   const [form, setForm] = useState({
@@ -74,13 +73,8 @@ export default function EditInscription() {
     lieuNaissance: "",
     dateNaissance: "",
     telephone: "",
-    domaineId: String(param?.domaineId || ""),
-    filiereId: String(param?.filiereId || ""),
-    mentionId: String(param?.mentionId || ""),
-    anneeId: String(param?.anneeId || ""),
-    date: formattedDate,
-    estNouvelle: 1,
-    photo: "",
+    grade: "",
+    matricule: "",
   });
 
   // LOAD
@@ -92,23 +86,19 @@ export default function EditInscription() {
         const paysData = await paysService.getAll();
         setPays(paysData);
 
-        if (inscriptionToEdit) {
+        if (personnelToEdit) {
           setForm({
-            matricule: inscriptionToEdit.etudiant?.matricule || "",
-            nom: inscriptionToEdit.etudiant?.nom || "",
-            postnom: inscriptionToEdit.etudiant?.postnom || "",
-            prenom: inscriptionToEdit.etudiant?.prenom || "",
-            sexe: inscriptionToEdit.etudiant?.sexe || "Homme",
-            paysNaissanceId: String(inscriptionToEdit.etudiant?.paysNaissance?.id || ""),
-            lieuNaissance: inscriptionToEdit.etudiant?.lieuNaissance || "",
-            dateNaissance: inscriptionToEdit.etudiant?.dateNaissance || "",
-            telephone: inscriptionToEdit.etudiant?.telephone || "",
-            domaineId: String(inscriptionToEdit.mention?.filiere?.domaine?.id || ""),
-            filiereId: String(inscriptionToEdit.mention?.filiere?.id || ""),
-            mentionId: String(inscriptionToEdit.mention?.id || ""),
-            anneeId: String(inscriptionToEdit.annee?.id || ""),
-            estNouvelle: inscriptionToEdit.estNouvelle || 1,
-            photo: inscriptionToEdit.photo || "",
+            matricule: personnelToEdit?.matricule || "",
+            nom: personnelToEdit?.nom || "",
+            postnom: personnelToEdit?.postnom || "",
+            prenom: personnelToEdit?.prenom || "",
+            sexe: personnelToEdit?.sexe || "Homme",
+            paysNaissanceId: String(personnelToEdit?.paysNaissance?.id || ""),
+            lieuNaissance: personnelToEdit?.lieuNaissance || "",
+            dateNaissance: personnelToEdit?.dateNaissance || "",
+            telephone: personnelToEdit?.telephone || "",
+            grade: personnelToEdit?.grade || "",
+            matricule: personnelToEdit?.grade || "",
           });
         }
       } catch (e) {
@@ -119,7 +109,7 @@ export default function EditInscription() {
     }
 
     load();
-  }, [inscriptionToEdit]);
+  }, [personnelToEdit]);
 
   const handleChange = (field) => (e) => {
     setForm((prev) => ({
@@ -128,44 +118,9 @@ export default function EditInscription() {
     }));
   };
 
-  const handlePhotoImport = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setForm((prev) => ({ ...prev, photo: reader.result }));
-    };
-    reader.readAsDataURL(file);
-  };
 
-  const handleCameraCapture = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const video = document.createElement("video");
-      video.srcObject = stream;
-      await video.play();
 
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0);
-
-      const image = canvas.toDataURL("image/png");
-
-      setForm((prev) => ({ ...prev, photo: image }));
-
-      stream.getTracks().forEach((t) => t.stop());
-    } catch (e) {
-      showToast("Impossible d'accéder à la caméra", "error");
-    }
-  };
-
-  const removePhoto = () => {
-    setForm((prev) => ({ ...prev, photo: "" }));
-  };
 
   const isValid =
     form.nom &&
@@ -189,7 +144,6 @@ export default function EditInscription() {
       setError("");
 
       const data = {
-        etudiant: {
           matricule: form.matricule,
           nom: form.nom,
           postnom: form.postnom,
@@ -199,24 +153,18 @@ export default function EditInscription() {
           lieuNaissance: form.lieuNaissance,
           dateNaissance: form.dateNaissance,
           telephone: form.telephone,
-        },
-        inscription: {
-          anneeId: form.anneeId,
-          mentionId: form.mentionId,
-          estNouvelle: form.estNouvelle,
-          photo: form.photo,
-        },
+          grade: form.grade
       };
 
-      if (inscriptionToEdit?.id) {
-        await inscriptionService.updateWithEtudiant(inscriptionToEdit.id, data);
+      if (personnelToEdit?.id) {
+        await personnelService.update(personnelToEdit.id, data);
       } else {
-        await inscriptionService.addWithEtudiant(data);
+        await personnelService.add(data);
       }
 
-      showToast("Inscription enregistrée avec succès", "success");
+      showToast("personnel enregistrée avec succès", "success");
 
-      setTimeout(() => navigate("/inscription/list"), 1200);
+      setTimeout(() => navigate("/deliberation/personnel"), 1200);
     } catch (err) {
       setError("Erreur lors de l'enregistrement");
       showToast("Erreur lors de l'enregistrement", "error");
@@ -239,12 +187,12 @@ export default function EditInscription() {
       <CCardHeader className="bg-light">
         <div>
           <h5 className="mb-0 fw-bold">
-            {inscriptionToEdit
-              ? "Modifier inscription"
-              : "Ajouter inscription"}
+            {personnelToEdit
+              ? "Modifier personnel"
+              : "Ajouter personnel"}
           </h5>
           <small className="text-medium-emphasis">
-            Gestion des inscriptions
+            Gestion des personnels
           </small>
         </div>
       </CCardHeader>
@@ -257,60 +205,8 @@ export default function EditInscription() {
 
           <CRow>
 
-            {/* PHOTO */}
-            <CCol md={3} className="mb-3">
-              <div className="border rounded p-3 text-center">
-
-                {form.photo ? (
-                  <CImage src={form.photo} fluid className="mb-3" />
-                ) : (
-                  <div className="bg-light p-5 mb-3">Aucune photo</div>
-                )}
-
-                <input
-                  type="file"
-                  hidden
-                  ref={fileInputRef}
-                  onChange={handlePhotoImport}
-                />
-
-                <div className="d-grid gap-2">
-
-                  <CButton
-                    color="primary"
-                    variant="outline"
-                    onClick={() => fileInputRef.current.click()}
-                  >
-                    <CIcon icon={cilCloudUpload} className="me-2" />
-                    Importer
-                  </CButton>
-
-                  <CButton
-                    color="info"
-                    variant="outline"
-                    onClick={handleCameraCapture}
-                  >
-                    <CIcon icon={cilCamera} className="me-2" />
-                    Capturer
-                  </CButton>
-
-                  {form.photo && (
-                    <CButton
-                      color="danger"
-                      variant="outline"
-                      onClick={removePhoto}
-                    >
-                      <CIcon icon={cilTrash} className="me-2" />
-                      Supprimer
-                    </CButton>
-                  )}
-
-                </div>
-              </div>
-            </CCol>
-
             {/* FORM */}
-            <CCol md={9}>
+            <CCol md={12}>
               <CRow>
 
                 {/* NOM */}
@@ -384,7 +280,7 @@ export default function EditInscription() {
                   </CInputGroup>
                 </CCol>
 
-                 {/* Matricule */}
+              {/* Matricule */}
                 <CCol md={4} className="mb-3">
                   <CFormLabel>Matricule</CFormLabel>
                   <CInputGroup>
@@ -429,7 +325,6 @@ export default function EditInscription() {
                     invalid={form.lieuNaissance && !isValidName(form.lieuNaissance)}
                   />
                 </CCol>
-
                 {/* DATE */}
                 <CCol md={4} className="mb-3">
                   <CFormLabel>Date naissance *</CFormLabel>
@@ -445,9 +340,22 @@ export default function EditInscription() {
                   </CInputGroup>
                 </CCol>
 
+                {/* Grade */}
+                <CCol md={4} className="mb-3">
+                  <CFormLabel>Grade</CFormLabel>
+                  <CInputGroup>
+                    <CInputGroupText>
+                      <CIcon icon={cilBadge} />
+                    </CInputGroupText>
+                    <CFormInput
+                      value={form.grade}
+                      onChange={handleChange("grade")}
+                    />
+                  </CInputGroup>
+                </CCol>
+
               </CRow>
             </CCol>
-
           </CRow>
 
           {/* BUTTONS */}
@@ -461,7 +369,7 @@ export default function EditInscription() {
                 disabled={!isValid}
               >
                 <CIcon icon={cilSave} className="me-2" />
-                {inscriptionToEdit ? "Modifier" : "Enregistrer"}
+                {personnelToEdit ? "Modifier" : "Enregistrer"}
               </CButton>
 
               <CButton
@@ -473,11 +381,8 @@ export default function EditInscription() {
                 <CIcon icon={cilXCircle} className="me-2" />
                 Annuler
               </CButton>
-
             </div>
-
         </CForm>
-
       </CCardBody>
     </CCard>
   );

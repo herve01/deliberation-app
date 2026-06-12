@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 import java.util.UUID;
 
 @Entity
-//@Table(name = "etudiant")
+@Table(name = "unite_enseignement")
 public class UniteEnseignement extends ModelBase {
     private String code;
     private String intitule;

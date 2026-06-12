@@ -10,6 +10,8 @@ public class MentionSemestreEcuePojo {
 
     private Boolean estCote;
 
+    private Boolean allNotes;
+
     private long countManqueCote;
 
     private long countWithCote;
@@ -36,6 +38,8 @@ public class MentionSemestreEcuePojo {
 
     public void setCountManqueCote(long countManqueCote) {
         this.countManqueCote = countManqueCote;
+
+        this.allNotes = countManqueCote == 0;
     }
 
     public long getCountWithCote() {
@@ -47,5 +51,13 @@ public class MentionSemestreEcuePojo {
         this.countWithCote = countWithCote;
 
         estCote = countWithCote > 0;
+    }
+
+    public Boolean getAllNotes() {
+        return allNotes;
+    }
+
+    public void setAllNotes(Boolean allNotes) {
+        this.allNotes = allNotes;
     }
 }

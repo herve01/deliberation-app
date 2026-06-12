@@ -21,4 +21,10 @@ export default {
 
   // DELETE /api/mention_jury_membre_details/{id}
   delete: (id) => api.remove(entity, id),
+
+  addAll: (dto) => api.add(`${entity}/add_all`, dto),
+
+  getAllByAnnee: (anneeId) => api.getAll(entity, { path: `annee/${anneeId}/details`}),
+
+  getByAnneeMention: (anneeId, mentionId) => api.get(entity, { path: `annee/${anneeId}/mention/${mentionId}/details`}),
 };

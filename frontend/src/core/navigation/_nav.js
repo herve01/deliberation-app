@@ -106,29 +106,26 @@ const navigation = [
         to: "/deliberation/dashboard",
         icon: "bi bi-speedometer2",
       },
-
-      {
-        name: "Membres du jury",
-        to: "/jury-membres",
-        icon: "bi bi-person-badge",
-      },
-      {
-        name: "Jury par mention",
-        to: "/jury-mention",
-        icon: "bi bi-diagram-2",
-      },
-      {
+     {
         name: "Délibération",
         to: "/deliberation/list",
         icon: "bi bi-clipboard-data",
+     },
+     {
+        name: "Validation déliberation",
+        to: "/deliberation/validation",
+        icon: "bi bi-clipboard-data",
+     },
+      {
+        name: "Personnel",
+        to: "/deliberation/personnel",
+        icon: "bi bi-person-badge",
       },
-
-    {
-      name: "Délibération Traitement",
-      to: "/deliberation/traitement",
-      icon: "bi bi-clipboard-data",
-    },
-
+      {
+        name: "Membre jury",
+        to: "/deliberation/membre-jury",
+        icon: "bi bi-diagram-2",
+      },
     ],
   },
    { divider: true },

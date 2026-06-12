@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-//@Table(name = "inscription")
+@Table(name = "inscription")
 public class Inscription extends ModelBase {
     @ManyToOne
     @JoinColumn(name = "etudiant_id")

@@ -4,12 +4,12 @@ import com.deliberation.dto.inscription.AnneeAcademiqueDTO;
 import com.deliberation.model.ModelBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 
 @Entity
-//@Table(name = "annee_academique")
-
+@Table(name = "annee_academique")
 public class AnneeAcademique extends ModelBase {
 
     @Column(unique = true)

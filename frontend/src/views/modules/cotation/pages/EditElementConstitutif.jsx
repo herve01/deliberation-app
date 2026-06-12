@@ -99,7 +99,7 @@ export default function EditEcue() {
         if (ecueToEdit) {
 
           setForm({
-            ueId: ecueToEdit.ueId || "",
+            ueId: String(ecueToEdit.ue.id || ""),
             intitule: ecueToEdit.intitule || "",
             credit: ecueToEdit.credit || "",
 
@@ -133,13 +133,10 @@ export default function EditEcue() {
   }, [ecueToEdit]);
 
   // HANDLE CHANGE
-  const handleChange = (e) => {
-
-    const { name, value } = e.target;
-
+  const handleChange = (field) => (e) => {
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [field]: e.target.value,
     }));
   };
 
@@ -313,7 +310,7 @@ export default function EditEcue() {
                     <CFormSelect
                       name="ueId"
                       value={form.ueId}
-                      onChange={handleChange}
+                      onChange={handleChange("ueId")}
                       invalid={!form.ueId}
                     >
 
@@ -359,7 +356,7 @@ export default function EditEcue() {
                       name="intitule"
                       placeholder="Ex: Algorithmique"
                       value={form.intitule}
-                      onChange={handleChange}
+                      onChange={handleChange("intitule")}
                       invalid={
                         form.intitule &&
                         form.intitule.length < 2
@@ -407,7 +404,7 @@ export default function EditEcue() {
                       name="credit"
                       placeholder="0"
                       value={form.credit}
-                      onChange={handleChange}
+                      onChange={handleChange("credit")}
                     />
 
                   </CInputGroup>
@@ -433,7 +430,7 @@ export default function EditEcue() {
                       name="nombreHeureCmi"
                       placeholder="0"
                       value={form.nombreHeureCmi}
-                      onChange={handleChange}
+                      onChange={handleChange("nombreHeureCmi")}
                     />
 
                   </CInputGroup>
@@ -459,7 +456,7 @@ export default function EditEcue() {
                       name="nombreHeureTd"
                       placeholder="0"
                       value={form.nombreHeureTd}
-                      onChange={handleChange}
+                      onChange={handleChange("nombreHeureTd")}
                     />
 
                   </CInputGroup>
@@ -485,7 +482,7 @@ export default function EditEcue() {
                       name="nombreHeureTp"
                       placeholder="0"
                       value={form.nombreHeureTp}
-                      onChange={handleChange}
+                      onChange={handleChange("nombreHeureTp")}
                     />
 
                   </CInputGroup>

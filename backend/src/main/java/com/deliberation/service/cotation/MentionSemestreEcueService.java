@@ -85,11 +85,16 @@ public class MentionSemestreEcueService implements IService<MentionSemestreEcue,
         return repository.findAll();
     }
 
+    public List<MentionSemestreEcue> getAll(String mentionId, String semestreId, String anneeId) {
+        return semestreId.trim().equals("-1") ?
+                repository.findByMentionIdAndAndAnneeId(mentionId, anneeId)
+                : List.of(repository.findOneByMentionIdAndSemestreIdAndAnneeId(mentionId, semestreId, anneeId).get());
+    }
+
     @Override
     public Long count() {
         return repository.count();
     }
-
 
     /***
      *
@@ -106,7 +111,7 @@ public class MentionSemestreEcueService implements IService<MentionSemestreEcue,
             .map(mention -> {
                 logger.info("[MentionSemestreEcueService] Mention trouvée : {}", mention.getId());
 
-                var details = detailRepository.findByMentionSemestreId(mention.getId());
+                var details = detailRepository.findByMentionSemestreIdOrderByUe(mention.getId());
 
                 mention.setDetails(details);
 

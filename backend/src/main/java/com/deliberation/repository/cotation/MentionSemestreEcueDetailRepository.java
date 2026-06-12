@@ -16,6 +16,15 @@ public interface MentionSemestreEcueDetailRepository extends JpaRepository<Menti
 
     List<MentionSemestreEcueDetail> findByMentionSemestreId(String mentionSemestreId);
 
+    @Query("""
+    SELECT d
+    FROM MentionSemestreEcueDetail d
+    WHERE d.mentionSemestre.id = :mentionSemestreId
+    ORDER BY d.categorie.id DESC, d.ecue.ue.intitule ASC
+    """)
+    List<MentionSemestreEcueDetail> findByMentionSemestreIdOrderByUe(
+            @Param("mentionSemestreId") String mentionSemestreId);
+
     long countByMentionSemestreId(String mentionSemestreId);
 
     @Query("""

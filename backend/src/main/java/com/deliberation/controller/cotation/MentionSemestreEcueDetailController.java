@@ -221,7 +221,10 @@ public class MentionSemestreEcueDetailController {
 
         return service.getAll(mentionSemestre.getId())
                 .stream()
-                .peek(detail -> detail.setMentionSemestre(mentionSemestre))
+                .map(detail -> {
+                    detail.setMentionSemestre(mentionSemestre);
+                    return detail;
+                })
                 .toList();
     }
 }

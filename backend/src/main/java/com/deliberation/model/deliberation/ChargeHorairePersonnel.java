@@ -7,7 +7,7 @@ import com.deliberation.model.inscription.AnneeAcademique;
 import jakarta.persistence.*;
 
 @Entity
-//@Table(name = "personnel_affectation_mention_ecue")
+@Table(name = "charge_horaire_personnel")
 public class ChargeHorairePersonnel extends ModelBase {
 
     @ManyToOne

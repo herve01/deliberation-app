@@ -16,13 +16,10 @@ import java.util.UUID;
 public class MentionService implements IService<Mention, String> {
 
     private final MentionRepository repository;
-    private final NiveauRepository niveauRepository;
-    private final FiliereRepository filiereRepository;
 
-    public MentionService(MentionRepository repository, NiveauRepository niveauRepository, FiliereRepository filiereRepository) {
+
+    public MentionService(MentionRepository repository) {
         this.repository = repository;
-        this.niveauRepository = niveauRepository;
-        this.filiereRepository = filiereRepository;
     }
 
     @Override

@@ -37,16 +37,13 @@ public class DeliberationController {
     private final SemestreService semestreService;
     private final SessionService sessionService;
     private final InscriptionService inscriptionService;
-    private final MentionSemestreEcueDetailService mentionSemestreEcueDetailService;
 
     private static final Logger logger = LoggerFactory.getLogger(DeliberationController.class);
 
     public DeliberationController(
-            DeliberationService service,
-            MentionService mentionService,
-            AnneeService anneeService,
-            SemestreService semestreService,
-            SessionService sessionService, InscriptionService inscriptionService, MentionSemestreEcueDetailService mentionSemestreEcueDetailService
+            DeliberationService service, MentionService mentionService,
+            AnneeService anneeService, SemestreService semestreService,
+            SessionService sessionService, InscriptionService inscriptionService
     ) {
         this.service = service;
         this.mentionService = mentionService;
@@ -54,7 +51,6 @@ public class DeliberationController {
         this.semestreService = semestreService;
         this.sessionService = sessionService;
         this.inscriptionService = inscriptionService;
-        this.mentionSemestreEcueDetailService = mentionSemestreEcueDetailService;
     }
 
     @GetMapping
@@ -82,14 +78,14 @@ public class DeliberationController {
         logger.info("[DeliberationMentionController] GET /api/deliberations/{} - Récupération", id);
 
         return service.get(id)
-                .map(delib -> {
-                    logger.info("[DeliberationMentionController] Délibération {} trouvée", id);
-                    return ResponseEntity.ok(delib);
-                })
-                .orElseGet(() -> {
-                    logger.warn("[DeliberationMentionController] Délibération {} introuvable", id);
-                    return ResponseEntity.notFound().build();
-                });
+            .map(delib -> {
+                logger.info("[DeliberationMentionController] Délibération {} trouvée", id);
+                return ResponseEntity.ok(delib);
+            })
+            .orElseGet(() -> {
+                logger.warn("[DeliberationMentionController] Délibération {} introuvable", id);
+                return ResponseEntity.notFound().build();
+            });
     }
 
     @PostMapping
@@ -135,20 +131,16 @@ public class DeliberationController {
         logger.info("[DeliberationController] Création cotation mention");
 
         Mention mention = mentionService.get(dto.deliberation.mentionId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Mention introuvable"));
+                .orElseThrow(() -> new IllegalArgumentException("Mention introuvable"));
 
         Semestre semestre = semestreService.get(dto.deliberation.semestreId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Semestre introuvable"));
+                .orElseThrow(() -> new IllegalArgumentException("Semestre introuvable"));
 
         AnneeAcademique annee = anneeService.get(dto.deliberation.anneeId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Année académique introuvable"));
+                .orElseThrow(() -> new IllegalArgumentException("Année académique introuvable"));
 
         Session session = sessionService.get(dto.deliberation.sessionId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Session introuvable"));
+                .orElseThrow(() -> new IllegalArgumentException("Session introuvable"));
 
         Deliberation instance = new Deliberation();
         instance.fromDTO(dto.deliberation, mention, semestre, annee, session);
@@ -200,48 +192,47 @@ public class DeliberationController {
         logger.info("[DeliberationMentionController] PUT /api/deliberations/{} - Mise à jour", id);
 
         return service.get(id)
-                .map(existing -> {
+            .map(existing -> {
+                Mention mention = null;
+                if (dto.mentionId != null) {
+                    mention = mentionService.get(dto.mentionId)
+                            .orElseThrow(() -> new IllegalArgumentException("Mention introuvable"));
+                    existing.setMention(mention);
+                }
 
-                    Mention mention = null;
-                    if (dto.mentionId != null) {
-                        mention = mentionService.get(dto.mentionId)
-                                .orElseThrow(() -> new IllegalArgumentException("Mention introuvable"));
-                        existing.setMention(mention);
-                    }
+                Semestre semestre = null;
+                if (dto.semestreId != null) {
+                    semestre = semestreService.get(dto.semestreId)
+                            .orElseThrow(() -> new IllegalArgumentException("Semestre introuvable"));
+                    existing.setSemestre(semestre);
+                }
 
-                    Semestre semestre = null;
-                    if (dto.semestreId != null) {
-                        semestre = semestreService.get(dto.semestreId)
-                                .orElseThrow(() -> new IllegalArgumentException("Semestre introuvable"));
-                        existing.setSemestre(semestre);
-                    }
+                AnneeAcademique annee = null;
+                if (dto.anneeId != null) {
+                    annee = anneeService.get(dto.anneeId)
+                            .orElseThrow(() -> new IllegalArgumentException("Année académique introuvable"));
+                    existing.setAnnee(annee);
+                }
 
-                    AnneeAcademique annee = null;
-                    if (dto.anneeId != null) {
-                        annee = anneeService.get(dto.anneeId)
-                                .orElseThrow(() -> new IllegalArgumentException("Année académique introuvable"));
-                        existing.setAnnee(annee);
-                    }
+                Session session = null;
+                if (dto.sessionId != null) {
+                    session = sessionService.get(dto.sessionId)
+                            .orElseThrow(() -> new IllegalArgumentException("Session introuvable"));
+                    existing.setSession(session);
+                }
 
-                    Session session = null;
-                    if (dto.sessionId != null) {
-                        session = sessionService.get(dto.sessionId)
-                                .orElseThrow(() -> new IllegalArgumentException("Session introuvable"));
-                        existing.setSession(session);
-                    }
+                existing.fromDTO(dto, mention, semestre, annee, session);
 
-                    existing.fromDTO(dto, mention, semestre, annee, session);
+                Deliberation updated = service.update(id, existing);
 
-                    Deliberation updated = service.update(id, existing);
+                logger.info("[DeliberationMentionController] Délibération {} mise à jour avec succès", id);
 
-                    logger.info("[DeliberationMentionController] Délibération {} mise à jour avec succès", id);
-
-                    return ResponseEntity.ok(updated);
-                })
-                .orElseGet(() -> {
-                    logger.warn("[DeliberationMentionController] Délibération {} introuvable", id);
-                    return ResponseEntity.notFound().build();
-                });
+                return ResponseEntity.ok(updated);
+            })
+            .orElseGet(() -> {
+                logger.warn("[DeliberationMentionController] Délibération {} introuvable", id);
+                return ResponseEntity.notFound().build();
+            });
     }
 
     @DeleteMapping("/{id}")

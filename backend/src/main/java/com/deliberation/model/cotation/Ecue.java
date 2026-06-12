@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import java.util.UUID;
 
 @Entity
+@Table(name = "ecue")
 public class Ecue extends ModelBase {
     @ManyToOne
     @JoinColumn(name = "ue_id", nullable = false)

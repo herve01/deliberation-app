@@ -6,11 +6,12 @@ import com.deliberation.model.setting.Pays;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 
 @Entity
-//@Table(name = "etudiant")
+@Table(name = "personnel")
 public class Personnel extends ModelBase {
     private String matricule;
     private String nom;

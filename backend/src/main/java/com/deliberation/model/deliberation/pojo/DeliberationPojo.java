@@ -1,19 +1,14 @@
 package com.deliberation.model.deliberation.pojo;
 
+import com.deliberation.model.deliberation.DeliberationDetail;
 import com.deliberation.model.inscription.Inscription;
+
+import java.util.ArrayList;
 
 public class DeliberationPojo {
     private Inscription inscription;
 
-    private Float credits;
-
-    private Float valides;
-
-    private Float transferts;
-
-    private Float moyenne;
-
-    private String decision;
+    private DeliberationDetail deliberation;
 
     public Inscription getInscription() {
         return inscription;
@@ -23,43 +18,11 @@ public class DeliberationPojo {
         this.inscription = inscription;
     }
 
-    public Float getCredits() {
-        return credits;
+    public DeliberationDetail getDeliberation() {
+        return deliberation;
     }
 
-    public void setCredits(Float credits) {
-        this.credits = credits;
-    }
-
-    public Float getValides() {
-        return valides;
-    }
-
-    public void setValides(Float valides) {
-        this.valides = valides;
-    }
-
-    public Float getTransferts() {
-        return transferts;
-    }
-
-    public void setTransferts(Float transferts) {
-        this.transferts = transferts;
-    }
-
-    public Float getMoyenne() {
-        return moyenne;
-    }
-
-    public void setMoyenne(Float moyenne) {
-        this.moyenne = moyenne;
-    }
-
-    public String getDecision() {
-        return decision;
-    }
-
-    public void setDecision(String decision) {
-        this.decision = decision;
+    public void setDeliberation(DeliberationDetail deliberation) {
+        this.deliberation = deliberation;
     }
 }

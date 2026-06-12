@@ -44,6 +44,8 @@ import sessionService from "@src/infrastructure/services/cotation/sessionService
 import deliberationService from "@src/infrastructure/services/deliberation/deliberationService";
 import deliberationDetailService from "@src/infrastructure/services/deliberation/deliberationDetailService";
 
+import { useToast } from "@src/app/context/ToastContext";
+
 const STORAGE = {
   anneeId: "anneeIdStored",
   domaineId: "domaineIdStored",
@@ -54,6 +56,7 @@ const STORAGE = {
 
 export default function DeliberationMention() {
 
+  const { showToast } = useToast();
   const location = useLocation();
   // ================= STATE =================
 
@@ -113,7 +116,7 @@ export default function DeliberationMention() {
         setDomaines(d || []);
         setAnnees(a || []);
 
-      } catch {$
+      } catch {
         setError("Erreur chargement données");
       } finally {
         setLoading(false);
@@ -222,7 +225,6 @@ export default function DeliberationMention() {
           "Erreur lors du chargement de la délibération :", error);
 
         setDeliberations([]);
-        setMentionSemetsreEcueDetails([]);
       } finally {
         setLoading(false);
       }
@@ -285,52 +287,57 @@ export default function DeliberationMention() {
       try {
         setLoading(true);
 
-           const init = {
-              deliberaton: {
-                id: cotation?.id ?? "",
-                mentionId: param?.mentionId ?? "",
-                semestreId: param?.semestreId ?? "",
-                anneeId: param?.anneeId ?? "",
-                sessionId: session?.id ?? "",
-              },
-              details: []
-            };
+        console.log(param?.mentionId);
 
-            deliberations[0].mentionSemetsreEcueDetails.forEach((item) => {
-              const d = cotation?.details?.find(
-                (e) => e?.inscription?.id === item?.id
-              );
+        const delibId = deliberations[0]?.deliberation?.deliberation?.id;
 
-              init.details.push({
-                id: d?.id ?? "",
-                cotationId: cotation?.id ?? "",
-                inscriptionId: item?.id,
-                mentionSemestreEcueId: row?.id ?? "",
-                note: d?.note ?? null,
-                credit: row?.credit ?? 0,
-                estNoteAnnuelle: session.estAnnuel ?? false,
-                estTransfere: false,
-                estValide: false,
-                estValideTransfert : false
+         console.log('delibId', delibId);
+         console.log('deliberations', deliberations[0]?.deliberation);
 
-              });
-            });
 
-            setData(init);
+        const payload = {
+          deliberation: {
+            id: delibId ?? "",
+            mentionId: param?.mentionId ?? "",
+            semestreId: selectedSession?.semestre?.id ?? "",
+            anneeId: param?.anneeId ?? "",
+            sessionId: selectedSession?.id ?? "",
+          },
+          details: [],
+        };
 
-        await deliberationService.addWithDetails(data);
+        deliberations.forEach((item) => {
+          const d = item?.deliberation;
+
+          console.log('d', d);
+
+          payload.details.push({
+            id: item?.id ?? d?.id ?? "",
+            deliberationId: d?.deliberation?.id ?? "",
+            inscriptionId: item?.inscription?.id ?? "",
+            credits: d?.credits ?? 0,
+            valides: d?.valides ?? 0,
+            transferes: d?.transferes ?? 0,
+            moyenne: d?.moyenne ?? 0,
+            total: d?.total ?? 0,
+            aEchoue: d?.aEchoue,
+            decision: d?.decision,
+          });
+        });
+
+        setData(payload);
+
+        await deliberationService.addWithDetails(payload);
 
         showToast(
-          `Les cotes des étudiants pour l’ECUE "${row?.ecueName ?? ""}" ont été ${
-            cotation?.id ? "modifiées" : "enregistrées"
-          } avec succès !`
+          `La délibération de la mention "${selectedMention?.mentionName ?? ""}" a été enregistrée avec succès !`
         );
-
       } catch (error) {
-        console.error("Erreur save cotation:", error);
+        console.error("Erreur lors de l'enregistrement de la délibération :", error);
+
         showToast(
-            `Erreur lors de ${cotation?.id ? "la modification" : "l'enregistrement"} des cotations`,
-            "error"
+          "Erreur lors de l'enregistrement de la délibération.",
+          "error"
         );
       } finally {
         setLoading(false);
@@ -341,8 +348,9 @@ export default function DeliberationMention() {
 
   return (
 
-    <div className="container-fluid px-1 px-md-2">
-      <CCard className="shadow-sm">
+    <div className="container-fluid px-0 px-md-0">
+      <CCard className="shadow-sm"
+      >
         {/* HEADER */}
         <CCardHeader className="bg-light py-3 px-4">
           <div className="d-flex flex-column flex-md-row justify-content-between gap-2">
@@ -356,7 +364,7 @@ export default function DeliberationMention() {
               </div>
             </div>
             <div className="d-flex justify-content-between align-items-center gap-3">
-              <smal className="mb-0">{selectedMention?.mentionName}</smal>
+              <small className="mb-0">{selectedMention?.mentionName}</small>
 
               <CButton
                color="primary"
@@ -419,7 +427,7 @@ export default function DeliberationMention() {
                 getValue: (m) => m.id,
               },
             ].map((field) => (
-              <CCol key={field.label} xs={12} md={3}>
+              <CCol key={field.label} xs={12} md={3} className="px-2">
                 <CInputGroup>
                   <CInputGroupText>
                     <CIcon icon={field.icon} />
@@ -448,7 +456,7 @@ export default function DeliberationMention() {
 
           {/* SEARCH */}
           <div className="d-flex justify-content-between mb-3">
-            <div>
+            <div className="mt-3">
               {filteredData.length} élément(s)
             </div>
 
@@ -483,25 +491,36 @@ export default function DeliberationMention() {
               Aucune cotation inscrits pour cette mention
             </CAlert>
           ) : (
-            <div className="table-responsive">
+
+            <div
+              className="table-responsive"
+              style={{
+                width: "100%",
+                maxHeight: "75vh",
+                overflowY: "auto",
+                overflowX: "auto",
+              }}
+            >
               <CTable
-                bordered
-                hover
-                className="align-middle mb-0 border"
-                  style={{
-                    fontSize: "12px",
-                  }}
+                   bordered
+                   hover
+                   className="align-middle mb-0 border text-center"
+                   style={{
+                     width: "100%",
+                     tableLayout: "fixed",
+                     fontSize: "12px",
+                   }}
                 >
 
                 <CTableHead className="table-light">
 
                   <CTableRow>
                     <CTableHeaderCell rowSpan={3}
-
+                         style={{ width: "12%" }}
+                         className="text-start"
                     >
                       Étudiant
                     </CTableHeaderCell>
-
                     {
                       details.map((row, index) => (
 
@@ -533,15 +552,15 @@ export default function DeliberationMention() {
                       </CTableHeaderCell>
                     ))}
 
-                    <CTableHeaderCell rowSpan={3}>
+                    <CTableHeaderCell style={{ width: "5%" }} rowSpan={3}>
                       Crédits
                     </CTableHeaderCell>
 
-                    <CTableHeaderCell rowSpan={3}>
-                      Moyen
+                    <CTableHeaderCell style={{ width: "3.8%" }} rowSpan={3}>
+                      Moy
                     </CTableHeaderCell>
 
-                    <CTableHeaderCell rowSpan={3}>
+                    <CTableHeaderCell style={{ width: "6.5%" }} rowSpan={3}>
                       Décision
                     </CTableHeaderCell>
                   </CTableRow>
@@ -559,7 +578,7 @@ export default function DeliberationMention() {
                     ))}
                   </CTableRow>
 
-                  <CTableRow>
+                  <CTableRow style={{fontSize: "10px",}}>
                     {details.map((_, index) =>(
                       <React.Fragment key={index}>
                         <CTableHeaderCell>
@@ -609,15 +628,15 @@ export default function DeliberationMention() {
                           return (
                             <React.Fragment key={item.id}>
                               <CTableDataCell>
-                                {annuelsMap[item.id]?.note ?? 0}
+                                {annuelsMap[item.id]?.note?.toFixed(1) ?? 0}
                               </CTableDataCell>
 
                               <CTableDataCell>
-                                {examensMap[item.id]?.note ?? 0}
+                                {examensMap[item.id]?.note?.toFixed(1) ?? 0}
                               </CTableDataCell>
 
                               <CTableDataCell>
-                                {totalsMap[item.id]?.note ?? 0}
+                                {totalsMap[item.id]?.note?.toFixed(1) ?? 0}
                               </CTableDataCell>
                             </React.Fragment>
                           );
@@ -625,24 +644,24 @@ export default function DeliberationMention() {
 
                       <CTableDataCell>
                         <strong>
-                          {row.credits}
+                          {row?.deliberation?.credits}
                         </strong>
                       </CTableDataCell>
 
                       <CTableDataCell>
                         <strong>
-                          {row.moyenne}
+                          {row?.deliberation?.moyenne?.toFixed(1)}
                         </strong>
                       </CTableDataCell>
 
                       <CTableDataCell>
                         <CBadge
                           color={
-                            row.decision === "Admis"
+                            !row?.deliberation?.aEchoue
                               ? "success"
                               : "danger"
                           }>
-                          {row.decision}
+                          {row?.deliberation?.decision}
                         </CBadge>
                       </CTableDataCell>
                     </CTableRow>

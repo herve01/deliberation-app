@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "mention_semestre_ecue_detail")
 public class MentionSemestreEcueDetail extends ModelBase {
 
     @ManyToOne

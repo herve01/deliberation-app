@@ -7,8 +7,6 @@ import com.deliberation.dto.inscription.response.InscriptionRequestDTO;
 import com.deliberation.model.enums.TypeMotif;
 import com.deliberation.model.inscription.*;
 import com.deliberation.model.setting.Pays;
-import com.deliberation.service.cotation.MentionSemestreEcueDetailService;
-import com.deliberation.service.cotation.MentionSemestreEcueService;
 import com.deliberation.service.inscription.*;
 import com.deliberation.service.setting.PaysService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,8 +35,6 @@ public class InscriptionController {
     private final DomaineService domaineService;
     private final PaysService paysService;
     private final EtudiantService etudiantService;
-    private final MentionSemestreEcueDetailService mentionSemestreEcueDetailService;
-    private final MentionSemestreEcueService mentionSemestreEcueService;
 
 
     private static final Logger logger = LoggerFactory.getLogger(InscriptionController.class);
@@ -47,7 +43,7 @@ public class InscriptionController {
                                  AnneeService anneeService,
                                  MentionService mentionService, FiliereService filiereService, DomaineService domaineService,
                                  PaysService paysService,
-                                 EtudiantService etudiantService, MentionSemestreEcueDetailService mentionSemestreEcueDetailService, MentionSemestreEcueService mentionSemestreEcueService) {
+                                 EtudiantService etudiantService) {
         this.service = service;
         this.anneeService = anneeService;
         this.mentionService = mentionService;
@@ -55,8 +51,6 @@ public class InscriptionController {
         this.domaineService = domaineService;
         this.paysService = paysService;
         this.etudiantService = etudiantService;
-        this.mentionSemestreEcueDetailService = mentionSemestreEcueDetailService;
-        this.mentionSemestreEcueService = mentionSemestreEcueService;
     }
 
     @GetMapping
@@ -72,6 +66,15 @@ public class InscriptionController {
         logger.info("[InscriptionController] GET /api/inscriptions/{}/{}", type, id);
 
         return service.getAll(id, type);
+    }
+
+    @GetMapping("/mention/{mentionId}/annee/{anneeId}/semestre/{semestreId}/session/{sessionId}")
+    @Operation(summary = "Lister les inscriptions")
+    public List<Inscription> getByType(@PathVariable String mentionId,  @PathVariable String anneeId,
+                                       @PathVariable String semestreId, @PathVariable String sessionId) {
+        logger.info("[InscriptionController] GET /api/inscriptions/mention/{}/annee/{}/semestre/{}/session/{}", mentionId, anneeId, semestreId, sessionId);
+
+        return service.getAllBy(anneeId, mentionId, semestreId, sessionId);
     }
 
     @GetMapping("/etudiant/{etudiantId}/annee/{anneeId}")

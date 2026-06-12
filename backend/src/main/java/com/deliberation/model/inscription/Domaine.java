@@ -10,8 +10,7 @@ import jakarta.persistence.Table;
 import java.util.UUID;
 
 @Entity
-//@Table(name = "demaine")
-
+@Table(name = "domaine")
 public class Domaine extends ModelBase{
     private String intitule;
 

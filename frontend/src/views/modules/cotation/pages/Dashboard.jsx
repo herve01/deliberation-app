@@ -16,12 +16,17 @@ import {
   CSpinner,
   CProgress,
   CImage,
+  CDropdown,
+  CDropdownToggle,
+  CDropdownMenu,
+  CDropdownItem,
 } from "@coreui/react";
 
 import CIcon from "@coreui/icons-react";
 
 import {
   cilChart,
+  cilCalendar,
   cilPeople,
   cilCheckCircle,
   cilXCircle,
@@ -31,9 +36,13 @@ import {
   cilStar,
 } from "@coreui/icons";
 
+import anneeService from "@src/infrastructure/services/inscription/anneeService";
+
 const DashboardCotation = () => {
 
   const [loading, setLoading] = useState(true);
+
+  const [annees, setAnnees] = useState([]);
 
   const [stats, setStats] = useState({
     etudiantsCotes: 0,
@@ -46,13 +55,58 @@ const DashboardCotation = () => {
     ecueNonCotes: 0,
   });
 
+  const [anneeId, setAnneeId] = useState(
+    localStorage.getItem("dashboard_annee_id") || ""
+  );
+
   const [topEtudiants, setTopEtudiants] = useState([]);
 
   const [dernieresCotations, setDernieresCotations] = useState([]);
 
+    // LOAD ANNEES
+    useEffect(() => {
+      async function load() {
+        try {
+          setLoading(true);
+          const data = await anneeService.getAll();
+          setAnnees(data || []);
+
+          // AUTO SELECT
+          if (!anneeId && data?.length > 0) {
+
+            const defaultAnnee = data[0]?.id;
+            setAnneeId(defaultAnnee);
+            localStorage.setItem(
+              "dashboard_annee_id",
+              defaultAnnee
+            );
+          }
+        } catch (e) {
+          console.error(e);
+          setError("Impossible de charger les années");
+        } finally {
+          setLoading(false);
+        }
+      }
+      load();
+    }, []);
+
   useEffect(() => {
     loadData();
   }, []);
+
+  // CHANGE ANNEE
+  const handleChange = () => (e) => {
+
+    const value = e.target.value;
+
+    setAnneeId(value);
+
+    localStorage.setItem(
+      "dashboard_annee_id",
+      value
+    );
+  };
 
   const loadData = async () => {
 
@@ -118,19 +172,12 @@ const DashboardCotation = () => {
           (a, b) => b.moyenne - a.moyenne
         )
       );
-
       setDernieresCotations(data);
-
     } catch (error) {
-
       console.error(error);
-
     } finally {
-
       setLoading(false);
-
     }
-
   };
 
   const StatCard = ({
@@ -148,12 +195,12 @@ const DashboardCotation = () => {
     >
       <CCardBody>
 
-        <div className="d-flex justify-content-between align-items-start mb-3">
+        <div className="d-flex justify-content-between align-items-start mb-0">
 
           <div>
 
             <div
-              className="text-medium-emphasis fw-semibold mb-2"
+              className="text-medium-emphasis fw-semibold mb-1"
               style={{
                 fontSize: 13,
               }}
@@ -184,7 +231,7 @@ const DashboardCotation = () => {
 
         </div>
 
-        <div className="d-flex justify-content-between mb-2">
+        <div className="d-flex justify-content-between mb-1">
 
           <small className="text-medium-emphasis">
             Progression
@@ -253,7 +300,7 @@ const DashboardCotation = () => {
       {/* HEADER */}
 
       <div
-        className="mb-4 p-4 shadow-sm"
+        className="mb-3 p-3 shadow-sm"
         style={{
           borderRadius: 20,
           background:
@@ -280,23 +327,82 @@ const DashboardCotation = () => {
 
           </div>
 
-          <div
-            className="px-4 py-3"
+           <div
             style={{
-              background: "rgba(255,255,255,0.15)",
-              borderRadius: 16,
-            }}
-          >
+              position: "relative",
+            }}>
+            <CDropdown alignment="end">
+              <CDropdownToggle
+                color="light"
+                className="border-0 shadow-sm d-flex align-items-center gap-2 px-4 py-2"
+                style={{
+                  borderRadius: 16,
+                  background: "rgba(255,255,255,0.15)",
+                  color: "#fff",
+                  backdropFilter: "blur(8px)",
+                }}>
+                <CIcon icon={cilCalendar} />
+                <div className="text-start">
+                  <div
+                    className="small"
+                    style={{opacity: 0.8,}}>
+                    Année académique
+                  </div>
+                  <div className="fw-bold">
+                    {
+                      annees.find(
+                        (a) => a.id == anneeId
+                      )?.annee || "Sélectionner"
+                    }
+                  </div>
+                </div>
 
-            <div className="small">
-              Année académique
-            </div>
+                      </CDropdownToggle>
 
-            <div className="fw-bold fs-5">
-              2025 - 2026
-            </div>
+                      <CDropdownMenu
+                        className="border-0 shadow-lg mt-2"
+                        style={{
+                          borderRadius: 16,
+                          minWidth: 230,
+                        }}
+                      >
+                        {annees?.map((annee) => (
 
-          </div>
+                          <CDropdownItem
+                            key={annee.id}
+                            active={annee.id == anneeId}
+                            className="py-2 px-3"
+                            onClick={() => {
+                              setAnneeId(annee.id);
+                              localStorage.setItem(
+                                "dashboard_annee_id",
+                                annee.id
+                              );
+                            }}
+                          >
+
+                            <div className="d-flex justify-content-between align-items-center">
+                              <span className="fw-semibold">
+                                {annee.annee}
+                              </span>
+                              {annee.id == anneeId && (
+                                <CBadge
+                                  color="primary"
+                                  shape="rounded-pill"
+                                >
+                                  Active
+                                </CBadge>
+                              )}
+                            </div>
+
+                          </CDropdownItem>
+
+                        ))}
+
+                      </CDropdownMenu>
+                    </CDropdown>
+
+                  </div>
 
         </div>
 
@@ -304,7 +410,7 @@ const DashboardCotation = () => {
 
       {/* STATS */}
 
-      <CRow className="g-4 mb-4">
+      <CRow className="g-4 mb-3">
 
         <CCol xs={12} sm={6} xl={3}>
           <StatCard
@@ -350,7 +456,7 @@ const DashboardCotation = () => {
 
       {/* SECOND STATS */}
 
-      <CRow className="g-4 mb-4">
+      <CRow className="g-4 mb-3">
 
         <CCol xs={12} sm={6} xl={3}>
           <StatCard
@@ -396,7 +502,7 @@ const DashboardCotation = () => {
 
       {/* TOP ETUDIANTS */}
 
-      <CRow className="g-4 mb-4">
+      <CRow className="g-4 mb-3">
 
         <CCol xs={12} lg={7}>
 
@@ -407,7 +513,7 @@ const DashboardCotation = () => {
             }}
           >
 
-            <CCardHeader className="bg-white border-0 py-4">
+            <CCardHeader className="bg-white border-0 py-3">
 
               <div className="d-flex align-items-center gap-2">
 
@@ -470,8 +576,8 @@ const DashboardCotation = () => {
                           <div
                             className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
                             style={{
-                              width: 50,
-                              height: 50,
+                              width: 35,
+                              height: 35,
                               background:
                                 "linear-gradient(135deg,#4e73df,#224abe)",
                             }}
@@ -534,7 +640,7 @@ const DashboardCotation = () => {
             }}
           >
 
-            <CCardHeader className="bg-white border-0 py-4">
+            <CCardHeader className="bg-white border-0 py-3">
 
               <h5 className="fw-bold mb-0">
                 Progression des cotations
@@ -544,7 +650,7 @@ const DashboardCotation = () => {
 
             <CCardBody>
 
-              <div className="mb-4">
+              <div className="mb-3">
 
                 <div className="d-flex justify-content-between mb-2">
 
@@ -565,7 +671,7 @@ const DashboardCotation = () => {
 
               </div>
 
-              <div className="mb-4">
+              <div className="mb-3">
 
                 <div className="d-flex justify-content-between mb-2">
 
@@ -586,7 +692,7 @@ const DashboardCotation = () => {
 
               </div>
 
-              <div className="mb-4">
+              <div className="mb-3">
 
                 <div className="d-flex justify-content-between mb-2">
 
@@ -624,7 +730,7 @@ const DashboardCotation = () => {
         }}
       >
 
-        <CCardHeader className="bg-white border-0 py-4">
+        <CCardHeader className="bg-white border-0 py-3">
 
           <h5 className="fw-bold mb-0">
             Dernières cotations

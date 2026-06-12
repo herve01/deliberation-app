@@ -4,12 +4,10 @@ import com.deliberation.dto.cotation.CotationDetailDTO;
 import com.deliberation.model.ModelBase;
 import com.deliberation.model.inscription.Inscription;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "cotation_detail")
 public class CotationDetail extends ModelBase implements Cloneable {
 
     @ManyToOne

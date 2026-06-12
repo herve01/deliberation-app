@@ -4,6 +4,7 @@ import com.deliberation.model.inscription.Inscription;
 import com.deliberation.model.inscription.Mention;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -70,4 +71,27 @@ public interface InscriptionRepository extends JpaRepository<Inscription, String
             LocalDateTime fin
     );
 
+    @Query("""
+        SELECT i
+        FROM Inscription i
+        WHERE i.mention.id = :mentionId
+          AND i.annee.id = :anneeId
+          AND NOT EXISTS (
+              SELECT d.id
+              FROM DeliberationDetail d
+              JOIN d.deliberation de
+              WHERE d.inscription.id = i.id
+                AND de.annee.id = :anneeId
+                AND de.mention.id = :mentionId
+                AND de.semestre.id = :semestreId      
+                AND de.session.numero < (
+                SELECT s.numero
+                FROM Session s
+                WHERE s.id = :sessionId)
+                AND d.valides = d.credits
+          )
+    """)
+    List<Inscription> findEligibleInscriptions(
+            @Param("mentionId") String mentionId, @Param("anneeId") String anneeId,
+            @Param("semestreId") String semestreId, @Param("sessionId") String sessionId);
 }

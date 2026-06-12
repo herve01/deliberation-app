@@ -1,6 +1,8 @@
 package com.deliberation.controller.deliberation;
 
 import com.deliberation.dto.deliberation.DeliberationDetailDTO;
+import com.deliberation.model.cotation.Cotation;
+import com.deliberation.model.cotation.MentionSemestreEcue;
 import com.deliberation.model.deliberation.Deliberation;
 import com.deliberation.model.deliberation.DeliberationDetail;
 import com.deliberation.model.deliberation.pojo.DeliberationPojo;
@@ -36,12 +38,13 @@ public class DeliberationDetailController {
     private final CotationDetailService cotationDetailService;
 
     private final SessionService sessionService;
+    private final CategorieService categorieService;
 
     private static final Logger logger = LoggerFactory.getLogger(DeliberationDetailController.class);
 
     public DeliberationDetailController(
             DeliberationDetailService service, DeliberationService deliberationService,
-            InscriptionService inscriptionService, MentionSemestreEcueDetailService mentionSemestreEcueDetailService, MentionSemestreEcueService mentionSemestreEcueService, CotationService cotationService, CotationDetailService cotationDetailService, SessionService sessionService
+            InscriptionService inscriptionService, MentionSemestreEcueDetailService mentionSemestreEcueDetailService, MentionSemestreEcueService mentionSemestreEcueService, CotationService cotationService, CotationDetailService cotationDetailService, SessionService sessionService, CategorieService categorieService
     ) {
         this.service = service;
         this.deliberationService = deliberationService;
@@ -51,6 +54,7 @@ public class DeliberationDetailController {
         this.cotationService = cotationService;
         this.cotationDetailService = cotationDetailService;
         this.sessionService = sessionService;
+        this.categorieService = categorieService;
     }
 
     @GetMapping
@@ -78,14 +82,46 @@ public class DeliberationDetailController {
         logger.info("[DeliberationMentionDetailController] GET /api/deliberation_details/{} - Récupération", id);
 
         return service.get(id)
-                .map(detail -> {
-                    logger.info("[DeliberationMentionDetailController] Détail {} trouvé", id);
-                    return ResponseEntity.ok(detail);
-                })
-                .orElseGet(() -> {
-                    logger.warn("[DeliberationMentionDetailController] Détail {} introuvable", id);
-                    return ResponseEntity.notFound().build();
-                });
+            .map(deliberation -> {
+                logger.info("[DeliberationMentionDetailController] Détail {} trouvé", id);
+                return ResponseEntity.ok(deliberation);
+            })
+            .orElseGet(() -> {
+                logger.warn("[DeliberationMentionDetailController] Détail {} introuvable", id);
+                return ResponseEntity.notFound().build();
+            });
+    }
+
+    @GetMapping("/inscription/{inscriptionId}/semestre/{semestreId}/session/{sessionId}/previous")
+    @Operation(
+            summary = "Obtenir la délibération précédente d'une inscription",
+            description = "Retourne la dernière délibération précédente correspondant à l'inscription, au semestre et à la session."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Délibération trouvée"),
+            @ApiResponse(responseCode = "404", description = "Aucune délibération trouvée")
+    })
+    public ResponseEntity<DeliberationDetail> getPrevious(
+            @PathVariable String inscriptionId,
+            @PathVariable String semestreId,
+            @PathVariable String sessionId) {
+
+        logger.info("[DeliberationDetailController] GET /api/deliberation_details/inscription/{}/semestre/{}/session/{}/previous",
+                inscriptionId, semestreId, sessionId);
+
+        return service.getPrevious(inscriptionId, semestreId, sessionId)
+            .map(deliberation -> {
+                logger.info(
+                        "[DeliberationDetailController] Délibération précédente trouvée pour l'inscription {}",
+                        inscriptionId);
+                return ResponseEntity.ok(deliberation);
+            })
+            .orElseGet(() -> {
+                logger.warn(
+                        "[DeliberationDetailController] Aucune délibération précédente trouvée pour l'inscription {}",
+                        inscriptionId);
+                return ResponseEntity.notFound().build();
+            });
     }
 
     @PostMapping
@@ -195,97 +231,183 @@ public class DeliberationDetailController {
 
     @GetMapping("/annee/{anneeId}/mention/{mentionId}/semestre/{semestreId}/session/{sessionId}/deliberation")
     @Operation(summary = "Lister les inscriptions d'un étudiant par année")
-    public List<DeliberationPojo> getAllByAneeMentionSemestreSession(
+    public List<DeliberationPojo> getAllByAnneeMentionSemestreSession(
             @PathVariable String anneeId, @PathVariable String mentionId,
             @PathVariable String semestreId, @PathVariable String sessionId
     ) {
 
-        logger.info("[DeliberationDetailController] GET /api/deliberation_details/annee/{}/mention/{}/semestre/{}/session/{}",
+        logger.info("[DeliberationDetailController] GET /api/deliberation_details/annee/{}/mention/{}/semestre/{}/session/{}/deliberation",
                 anneeId, mentionId, semestreId, sessionId);
 
-        logger.info(
-                "[DeliberationDetailController] GET /api/deliberation_details/annee/{}/mention/{}/semestre/{}/session/{}",
-                anneeId, mentionId, semestreId, sessionId
-        );
+        var mentionSemestres = mentionSemestreEcueService.getAll(mentionId, semestreId, anneeId);
 
-        var mentionSemestre = mentionSemestreEcueService.get(mentionId, semestreId, anneeId);
+        //var sessions = sessionService.getAll(semestreId, sessionId);
 
-        Float credits = Optional.ofNullable(mentionSemestreEcueDetailService.sum(mentionSemestre.get().getId())).orElse(0F);
+        var deliberationOpt = deliberationService.get(mentionId, semestreId, anneeId, sessionId);
 
-        return inscriptionService.getAllBy(anneeId, mentionId)
-                .stream()
-                .map(inscription -> {
-                    var d = new DeliberationPojo();
-                    d.setInscription(inscription);
-                    d.setCredits(credits);
-                    d.setValides(0F);
-                    d.setTransferts(0F);
-                    d.setMoyenne(0F);
-                    d.setDecision("");
-                    return d;
-                })
-                .toList();
+        Float credits = "-1".equals(semestreId.trim())
+                ? Optional.ofNullable(mentionSemestreEcueDetailService.sum(mentionSemestres)).orElse(0F)
+                : Optional.ofNullable(mentionSemestreEcueDetailService.sum(mentionSemestres.get(0).getId())).orElse(0F);
+
+        return inscriptionService.getAllBy(anneeId, mentionId, semestreId, sessionId)
+            .stream()
+            .map(inscription -> {
+
+                var deliberation = deliberationOpt
+                    .flatMap(delib  -> service.get(delib.getId(), inscription.getId(), semestreId)).
+                    orElse(new DeliberationDetail());
+
+                if (deliberation.getId() == null) {
+                    float newCredits = service.getPrevious(inscription.getId(), semestreId, sessionId)
+                            .map(DeliberationDetail::getTransferes)
+                            .orElse(credits);
+
+                    deliberation.setCredits(newCredits);
+                    if("-1".equals(semestreId.trim())) {
+                       var all = service.get(null, inscription.getId(), semestreId);
+                        deliberation.setValides(all.get().getValides());
+                        //deliberation.setTransferes(all.get().getTransferes());
+                        deliberation.setMoyenne(all.get().getMoyenne());
+                    }
+                    else {
+                        deliberation.setValides(null);
+                        deliberation.setTransferes(null);
+                    }
+                }
+
+                var item = new DeliberationPojo();
+                item.setInscription(inscription);
+                item.setDeliberation(deliberation);
+
+                return item;
+            })
+            .toList();
     }
 
-    @GetMapping("/annee/{anneeId}/mention/{mentionId}/semestre/{semestreId}/session/{sessionId}/traitement")
+    @GetMapping("/annee/{anneeId}/mention/{mentionId}/semestre/{semestreId}/session/{sessionId}/details")
     @Operation(summary = "Lister les inscriptions d'un étudiant par année")
-    public List<DeliberationMentionPojo> getAllTTByAneeMentionSemestreSession(
+    public List<DeliberationMentionPojo> getAllTTByAnneeMentionSemestreSession(
             @PathVariable String anneeId, @PathVariable String mentionId, @PathVariable String semestreId, @PathVariable String sessionId) {
 
-        logger.info(
-                "[DeliberationDetailController] GET /api/deliberation_details/annee/{}/mention/{}/semestre/{}/session/{}/traitement",
-                anneeId, mentionId, semestreId, sessionId
-        );
+        logger.info("[DeliberationDetailController] GET /api/deliberation_details/annee/{}/mention/{}/semestre/{}/session/{}/traitement",
+                anneeId, mentionId, semestreId, sessionId);
 
         var mentionSemestre = mentionSemestreEcueService.getOne(mentionId, semestreId, anneeId);
-        var cotation = cotationService.get(anneeId, mentionId, semestreId, sessionId);
-        var sessionAnnuel = sessionService.getSessionAnnuel(semestreId);
 
-        logger.info(
-                "[DeliberationDetailController] cotation : {} | sessionAnnuel : {}",
-                cotation,
-                sessionAnnuel);
+        var sessions = sessionService.getAll(semestreId, sessionId);
 
-        if (mentionSemestre.isEmpty() || cotation.isEmpty()) {
+        if (mentionSemestre.isEmpty() || sessions.isEmpty()) {
             return List.of();
         }
-
-        var cotationAnnuel = cotationService.get(anneeId, mentionId, semestreId, sessionAnnuel.get().getId());
 
         Float credits = Optional.ofNullable(
                 mentionSemestreEcueDetailService.sum(mentionSemestre.get().getId())
         ).orElse(0F);
 
+        var deliberationOpt = deliberationService.get(mentionId, semestreId, anneeId, sessionId);
 
-        return inscriptionService.getAllBy(anneeId, mentionId)
-                .stream()
-                .map(inscription -> {
+        var categories = categorieService.getAll();
 
-                    var d = new DeliberationMentionPojo();
+        return inscriptionService.getAllBy(anneeId, mentionId, semestreId, sessionId)
+            .stream()
+            .map(inscription -> {
 
-                    d.setInscription(inscription);
-                    d.setCredits(credits);
-                    d.setValides(0F);
-                    d.setMoyenne(0F);
-                    d.setDecision("");
+                var d = new DeliberationMentionPojo(categories);
+                d.setInscription(inscription);
 
-                    var annuels = cotationAnnuel
+                var deliberation = deliberationOpt
+                    .flatMap(delib  -> service.get(delib.getId(), inscription.getId())).
+                    orElse(null);
+
+                sessions.forEach(s -> {
+                    var items = cotationService.get(anneeId, mentionId, semestreId, s.getId())
                         .map(c -> cotationDetailService.getAllByCotationInscription(
-                                c.getId(), inscription.getId()
+                                c.getId(),
+                                inscription.getId()
                         ))
                         .orElse(List.of());
 
-                   var examens = cotationDetailService.getAllByCotationInscription(
-                            cotation.get().getId(), inscription.getId());
+                    if (s.getNumero() < 0 || Boolean.TRUE.equals(s.getEstAnnuel())) {
+                        d.setAnnuels(items);
+                    } else if (s.getNumero() == 1 && Boolean.FALSE.equals(s.getEstAnnuel())) {
+                        d.setExamens(items);
+                    } else if (s.getNumero() == 2 && Boolean.FALSE.equals(s.getEstAnnuel())) {
+                        d.setRattrapages(items);
+                    }
+                });
 
-                    var details = mentionSemestreEcueDetailService.getAll(mentionSemestre.get().getId());
+                var details = mentionSemestreEcueDetailService.getAll(mentionSemestre.get().getId());
 
-                    d.setMentionSemestreEcueDetails(details);
-                    d.setAnnuels(annuels);
-                    d.setExamens(examens);
+                if(deliberation == null)
+                    d.getDeliberation().setCredits(credits);
+                else
+                    d.setDeliberation(deliberation);
 
-                    return d;
-                })
-                .toList();
+                d.setMentionSemestreEcueDetails(details);
+
+                return d;
+            })
+            .toList();
+    }
+
+    @GetMapping("/inscription/{inscriptionId}/semestre/{semestreId}/session/{sessionId}/details")
+    @Operation(summary = "Lister les détails de délibération d'une inscription")
+    public ResponseEntity<DeliberationMentionPojo> getDetailByInscriptionSemestreSession(
+            @PathVariable String inscriptionId, @PathVariable String semestreId, @PathVariable String sessionId) {
+
+        var inscriptionOpt = inscriptionService.get(inscriptionId);
+        var categories = categorieService.getAll();
+        var sessions = sessionService.getAll(semestreId, sessionId);
+
+        if (inscriptionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var inscription = inscriptionOpt.get();
+        var anneeId = inscription.getAnnee().getId();
+        var mentionId = inscription.getMention().getId();
+
+        var mentionSemestreOpt = mentionSemestreEcueService.getOne(mentionId, semestreId, anneeId);
+        var deliberationOpt = deliberationService.get(mentionId, semestreId, anneeId, sessionId);
+
+        if (mentionSemestreOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var mentionSemestre = mentionSemestreOpt.get();
+
+        Float credits = Optional.ofNullable(mentionSemestreEcueDetailService.sum(mentionSemestre.getId())
+        ).orElse(0F);
+
+        var details = mentionSemestreEcueDetailService.getAll(mentionSemestre.getId());
+
+        var deliberation = deliberationOpt
+                .flatMap(d  -> service.get(d.getId(), inscription.getId())).
+                orElse(null);
+
+        var result = new DeliberationMentionPojo(categories);
+        result.setInscription(inscription);
+        result.setDeliberation(deliberation);
+
+        sessions.forEach(s -> {
+            var items = cotationService.get(anneeId, mentionId, semestreId, s.getId())
+                    .map(c -> cotationDetailService.getAllByCotationInscription(
+                            c.getId(),
+                            inscription.getId()
+                    ))
+                    .orElse(List.of());
+
+            if (s.getNumero() < 0 || Boolean.TRUE.equals(s.getEstAnnuel())) {
+                result.setAnnuels(items);
+            } else if (s.getNumero() == 1 && Boolean.FALSE.equals(s.getEstAnnuel())) {
+                result.setExamens(items);
+            } else if (s.getNumero() == 2 && Boolean.FALSE.equals(s.getEstAnnuel())) {
+                result.setRattrapages(items);
+            }
+        });
+
+        result.setMentionSemestreEcueDetails(details);
+
+        return ResponseEntity.ok(result);
     }
 }

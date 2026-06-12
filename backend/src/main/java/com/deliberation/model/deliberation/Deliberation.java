@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-//@Table(name = "etudiant")
+@Table(name = "deliberation")
 public class Deliberation extends ModelBase {
     @ManyToOne
     @JoinColumn(name = "mention_id")

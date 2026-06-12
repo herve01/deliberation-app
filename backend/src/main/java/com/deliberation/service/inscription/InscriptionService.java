@@ -139,6 +139,11 @@ public class InscriptionService implements IService<Inscription, String> {
                 .findAllByAnnee_IdAndMention_Id(anneeId, mentionId);
     }
 
+    public List<Inscription> getAllBy(String anneeId, String mentionId, String semestreId, String sessionId) {
+        return repository
+                .findEligibleInscriptions(mentionId, anneeId, semestreId, sessionId);
+    }
+
     public Optional<Inscription> get(String etudiantId, String anneeId, String mentionId) {
         return repository
                 .findOneByEtudiant_IdAndAnnee_IdAndMention_Id(

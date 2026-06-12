@@ -209,21 +209,50 @@ export default function CotationList() {
     }, [param.mentionId, param.anneeId, selectedSession]);
 
   // ================= INSCRIPTIONS =================
-  useEffect(() => {
-    if (!param.anneeId || !param.mentionId) return setInscriptions([]);
+useEffect(() => {
+  if (
+    !param?.anneeId ||
+    !param?.mentionId ||
+    !selectedSession?.semestre?.id ||
+    !selectedSession?.id
+  ) {
+    setInscriptions([]);
+    return;
+  }
 
-    inscriptionService
-      .getAllByAnneeMention(param?.anneeId, param?.mentionId)
-      .then(setInscriptions)
-      .catch(() => setInscriptions([]));
+  inscriptionService
+    .getAllByMentionAnneeSemestreSession(
+      param?.mentionId,
+      param?.anneeId,
+      selectedSession?.semestre?.id,
+      selectedSession?.id
+    )
+    .then((data) => {
+      setInscriptions(data);
+    })
+    .catch((error) => {
+      console.error(error);
+      setInscriptions([]);
+    });
 
-  }, [param?.anneeId, param?.mentionId]);
+}, [
+  param?.mentionId,
+  param?.anneeId,
+  selectedSession?.semestre?.id,
+  selectedSession?.id,
+]);
+
+useEffect(() => {
+  console.log("inscriptions mises à jour :", inscriptions);
+}, [inscriptions]);
+
+
 
   // ================= HELPERS =================
   const normalize = (t) =>
     String(t || "")
       .normalize("NFD")
-      .replace(/[\u0300-\u036f$]/g, "")
+      .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase();
 
   const filteredData = useMemo(() => {
@@ -325,7 +354,7 @@ export default function CotationList() {
               getValue: (f) => f.id,
             },
           ].map((field) => (
-            <CCol key={field.label} xs={12} sm={6} md={4}>
+            <CCol key={field.label} xs={12} sm={6} md={4} className="px-2">
               <CInputGroup>
                 <CInputGroupText>
                   <CIcon icon={field.icon} />
@@ -460,25 +489,24 @@ export default function CotationList() {
 
                             <CTableDataCell>
                                 <CRow>
-                                    <CCol>
-                                        <CBadge
-                                          className={`px-2 py-1 rounded-pill border border-2 ${
-                                            row?.estCote ? "border-success" : "border-danger"
-                                          }`}
-                                        >
-                                          <span className="fw-bold text-dark">
-                                            {row?.mentionSemestreEcueDetail?.credit ?? "-"}
-                                          </span>
-                                        </CBadge>
-                                     </CCol>
-
-                                      <CCol>
-                                        <CBadge color="info">
-                                            {row?.countWithCote || "0"} coté(s), {"  "}
-                                            {row?.countManqueCote || "0"} manque de cote(s)
-                                        </CBadge>
-                                      </CCol>
-                                    </CRow>
+                                <CCol>
+                                    <CBadge
+                                      className={`px-2 py-1 rounded-pill border border-2 ${
+                                        row?.estCote ? "border-success" : "border-danger"
+                                      }`}
+                                    >
+                                      <span className="fw-bold text-dark">
+                                        {row?.mentionSemestreEcueDetail?.credit ?? "-"}
+                                      </span>
+                                    </CBadge>
+                                 </CCol>
+                                  <CCol>
+                                    <CBadge color="info">
+                                        {row?.countWithCote || "0"} coté(s), {"  "}
+                                        {row?.countManqueCote || "0"} manque de cote(s)
+                                    </CBadge>
+                                  </CCol>
+                               </CRow>
                             </CTableDataCell>
 
                             <CTableDataCell className="text-end">
@@ -497,11 +525,9 @@ export default function CotationList() {
                       </CTableBody>
                     </CTable>
                   )}
-
                 </CCardBody>
               </CCard>
             </CCol>
-
           </CRow>
         </CCardBody>
       </CCard>

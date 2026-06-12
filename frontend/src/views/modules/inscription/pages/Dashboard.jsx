@@ -69,47 +69,30 @@ const Dashboard = () => {
 
   // LOAD ANNEES
   useEffect(() => {
-
     async function load() {
-
       try {
-
         setLoading(true);
-
         const data = await anneeService.getAll();
-
         setAnnees(data || []);
 
         // AUTO SELECT
         if (!anneeId && data?.length > 0) {
 
           const defaultAnnee = data[0]?.id;
-
           setAnneeId(defaultAnnee);
-
           localStorage.setItem(
             "dashboard_annee_id",
             defaultAnnee
           );
-
         }
-
       } catch (e) {
-
         console.error(e);
-
         setError("Impossible de charger les années");
-
       } finally {
-
         setLoading(false);
-
       }
-
     }
-
     load();
-
   }, []);
 
   // CHANGE ANNEE
@@ -123,18 +106,14 @@ const Dashboard = () => {
       "dashboard_annee_id",
       value
     );
-
   };
 
   // LOAD DASHBOARD
   useEffect(() => {
-
     if (!anneeId) return;
 
     async function loadDashboard() {
-
       try {
-
         setLoading(true);
 
         const [inscriptions, data] = await Promise.all([
@@ -170,15 +149,10 @@ const Dashboard = () => {
         );
 
       } finally {
-
         setLoading(false);
-
       }
-
     }
-
     loadDashboard();
-
   }, [anneeId]);
 
   // FORMAT DATE
@@ -205,20 +179,15 @@ const Dashboard = () => {
     icon,
     progress = 0,
   }) => (
-
     <CCard
       className="border-1 shadow-sm h-100"
       style={{
         borderRadius: 18,
       }}
     >
-
       <CCardBody>
-
         <div className="d-flex justify-content-between align-items-start mb-0">
-
           <div>
-
             <div
               className="text-medium-emphasis fw-semibold mb-1"
               style={{
@@ -330,18 +299,13 @@ const Dashboard = () => {
             >
               Gestion des inscriptions universitaires
             </div>
-
-
           </div>
 
         <div
           style={{
             position: "relative",
-          }}
-        >
-
+          }}>
           <CDropdown alignment="end">
-
             <CDropdownToggle
               color="light"
               className="border-0 shadow-sm d-flex align-items-center gap-2 px-4 py-2"
@@ -350,32 +314,22 @@ const Dashboard = () => {
                 background: "rgba(255,255,255,0.15)",
                 color: "#fff",
                 backdropFilter: "blur(8px)",
-              }}
-            >
+              }}>
 
               <CIcon icon={cilCalendar} />
-
               <div className="text-start">
-
                 <div
                   className="small"
-                  style={{
-                    opacity: 0.8,
-                  }}
-                >
+                  style={{opacity: 0.8,}}>
                   Année académique
                 </div>
-
                 <div className="fw-bold">
-
                   {
                     annees.find(
                       (a) => a.id == anneeId
                     )?.annee || "Sélectionner"
                   }
-
                 </div>
-
               </div>
 
             </CDropdownToggle>

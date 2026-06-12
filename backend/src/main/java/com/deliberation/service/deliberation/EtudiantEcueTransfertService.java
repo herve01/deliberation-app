@@ -21,7 +21,7 @@ public class EtudiantEcueTransfertService implements IService<EtudiantEcueTransf
 
     @Override
     public EtudiantEcueTransfert create(EtudiantEcueTransfert instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 

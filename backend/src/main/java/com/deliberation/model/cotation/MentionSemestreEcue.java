@@ -7,15 +7,13 @@ import com.deliberation.model.inscription.AnneeAcademique;
 import com.deliberation.model.inscription.Mention;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Transient;
+import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "mention_semestre_ecue")
 public class MentionSemestreEcue extends ModelBase {
 
     @ManyToOne

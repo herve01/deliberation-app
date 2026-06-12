@@ -85,9 +85,7 @@ export default function EditSession() {
         const semestresData =
           await semestreService.getAll();
 
-        setSemestres(
-          semestresData || []
-        );
+        setSemestres(semestresData || []);
 
         if (sessionToEdit) {
 
@@ -95,7 +93,6 @@ export default function EditSession() {
             semestreId:
               sessionToEdit.semestre?.id ||
               "",
-
             numero:
               sessionToEdit.numero || 1,
           });
@@ -261,7 +258,7 @@ export default function EditSession() {
                       key={s.id}
                       value={s.id}
                     >
-                      {s.intitule}
+                      {s.semestreName}
                     </option>
                   ))}
 
@@ -301,11 +298,8 @@ export default function EditSession() {
                   value={form.numero}
                   onChange={handleChange}
                 />
-
               </CInputGroup>
-
             </CCol>
-
           </CRow>
 
           {/* ACTIONS */}
@@ -324,15 +318,8 @@ export default function EditSession() {
               type="submit"
               color="primary"
               disabled={!isValid || saving}
-              className="
-                px-4
-                py-2
-                d-flex
-                align-items-center
-                justify-content-center
-              "
-            >
-
+              className="px-4 py-2 d-flex
+                align-items-center justify-content-center">
               {saving ? (
                 <>
                   <CSpinner
@@ -345,50 +332,30 @@ export default function EditSession() {
                 <>
                   <CIcon
                     icon={
-                      sessionToEdit
-                        ? cilPencil
-                        : cilSave
-                    }
+                      sessionToEdit ? cilPencil : cilSave}
                     className="me-2"
                   />
-
-                  {sessionToEdit
-                    ? "Modifier"
-                    : "Enregistrer"}
+                  {sessionToEdit ? "Modifier" : "Enregistrer"}
                 </>
               )}
-
             </CButton>
 
             <CButton
               type="button"
               color="light"
-              className="
-                border
-                px-4
-                py-2
-                d-flex
-                align-items-center
-                justify-content-center
-              "
+              className="border px-4 py-2 d-flex
+                align-items-center justify-content-center"
               onClick={() => navigate(-1)}
             >
-
               <CIcon
                 icon={cilArrowLeft}
                 className="me-2"
               />
-
               Annuler
-
             </CButton>
-
           </div>
-
         </CForm>
-
       </CCardBody>
-
     </CCard>
   );
 }

@@ -4,9 +4,10 @@ import com.deliberation.dto.inscription.CycleDTO;
 import com.deliberation.dto.inscription.DomaineDTO;
 import com.deliberation.model.ModelBase;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
-
+@Table(name = "cycle")
 public class Cycle extends ModelBase{
     private String intitule;
     private String description;

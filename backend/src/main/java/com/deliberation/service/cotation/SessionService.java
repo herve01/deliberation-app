@@ -77,6 +77,10 @@ public class SessionService implements IService<Session, String> {
         return data;
     }
 
+    public List<Session> getAll(String semestreId, String sessionId) {
+        return repository.findSessionsForDeliberation(semestreId, sessionId);
+    }
+
     @Override
     public Long count() {
         return repository.count();

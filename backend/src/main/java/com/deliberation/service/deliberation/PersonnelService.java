@@ -20,7 +20,7 @@ public class PersonnelService implements IService<Personnel, String> {
 
     @Override
     public Personnel create(Personnel instance) {
-        instance.setId(UUID.randomUUID().toString());
+        instance.setId(UUID.randomUUID().toString().replace("-", ""));
         return repository.save(instance);
     }
 

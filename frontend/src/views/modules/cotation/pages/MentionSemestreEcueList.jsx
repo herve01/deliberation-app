@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import {
   useNavigate,
@@ -6,80 +6,138 @@ import {
 } from "react-router-dom";
 
 import {
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CButton,
-  CSpinner,
-  CAlert,
-  CBadge,
+  CCard, CRow, CCol, CCardBody, CCardHeader,
+  CButton, CSpinner, CAlert, CBadge,
+  CFormSelect, CInputGroup, CInputGroupText,
+  CListGroup, CListGroupItem, CFormInput,
+  CTable, CTableHead, CTableBody, CTableRow,
+  CTableHeaderCell, CTableDataCell
 } from "@coreui/react";
 
 import {
-  cilPlus,
+    cilPlus,
   cilPencil,
-  cilTrash,
+  cilCalendar,
+  cilLibrary,
+  cilEducation,
+  cilSearch,
+  cilInfo,
 } from "@coreui/icons";
 
 import CIcon from "@coreui/icons-react";
 
-import mentionSemestreEcueDetailService from "@src/infrastructure/services/cotation/mentionSemestreEcueDetailService";
+import domaineService from "@src/infrastructure/services/inscription/domaineService";
+import filiereService from "@src/infrastructure/services/inscription/filiereService";
+import mentionService from "@src/infrastructure/services/inscription/mentionService";
+import anneeService from "@src/infrastructure/services/inscription/anneeService";
+import semestreService from "@src/infrastructure/services/cotation/semestreService";
 
-import Table from "@src/views/modules/shared/components/table";
+import mentionSemestreEcueDetailService from "@src/infrastructure/services/cotation/mentionSemestreEcueDetailService";
 
 import { useToast } from "@src/app/context/ToastContext";
 
-import "@src/styles/global.css";
+const STORAGE = {
+  anneeId: "anneeIdStored",
+  domaineId: "domaineIdStored",
+  filiereId: "filiereIdStored",
+  mention: "mentionStored",
+  semestre: "semestreStored",
+};
 
 export default function MentionEcueDetailList() {
 
   const navigate = useNavigate();
-
   const location = useLocation();
-
   const { showToast } = useToast();
+
+  const [domaines, setDomaines] = useState([]);
+  const [filieres, setFilieres] = useState([]);
+  const [mentions, setMentions] = useState([]);
+  const [annees, setAnnees] = useState([]);
+  const [semestres, setSemestres] = useState([]);
+
+    const [param, setParam] = useState({
+      anneeId: localStorage.getItem(STORAGE.anneeId) || "",
+      domaineId: localStorage.getItem(STORAGE.domaineId) || "",
+      filiereId: localStorage.getItem(STORAGE.filiereId) || "",
+      mention: localStorage.getItem(STORAGE.mention) || "",
+      semestre: localStorage.getItem(STORAGE.semestre) || "",
+    });
 
   const [items, setItems] = useState([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
+   const [search, setSearch] = useState("");
 
-  // LOAD DATA
-  async function load() {
+   const [incrementor, setIncrementor] = useState(0);
 
-    try {
+   useEffect(() => {
+       async function load() {
+         try {
+           setLoading(true);
 
-      setLoading(true);
+           const [d, a, data] = await Promise.all([
+             domaineService.getAll(),
+             anneeService.getAll(),
+             mentionSemestreEcueDetailService.getAll(),
+           ]);
 
-      const data =
-        await mentionSemestreEcueDetailService.getAll();
+           setDomaines(d || []);
+           setAnnees(a || []);
+            setItems(data || []);
+         } catch {
+           setError("Erreur chargement données");
+         } finally {
+           setLoading(false);
+         }
+       }
 
-      setItems(data || []);
+       load();
+     }, [location.state]);
 
-      setError("");
+useEffect(() => {
+    if (!param.domaineId) return setFilieres([]);
 
-    } catch (e) {
+    filiereService
+      .getAllByDomaine(param.domaineId)
+      .then(setFilieres)
+      .catch(() => setFilieres([]));
+  }, [param.domaineId]);
 
-      console.error(e);
+  // ================= MENTIONS =================
+  useEffect(() => {
+    if (!param.filiereId) return setMentions([]);
 
-      setError(
-        "Impossible de charger les données"
-      );
+    mentionService
+      .getAllByFiliere(param.filiereId)
+      .then(setMentions)
+      .catch(() => setMentions([]));
+  }, [param.filiereId]);
 
-    } finally {
+useEffect(() => {
+  const found = mentions.find(
+    (m) => String(m.id) === String(param.mention)
+  );
 
-      setLoading(false);
-    }
+  if (found) {
+    setIncrementor(
+      found.numeroSemestreIncementor || 0
+    );
+  } else {
+    setIncrementor(0);
   }
+}, [mentions, param.mention]);
 
   useEffect(() => {
+    if (incrementor < 0) return setSemestres([]);
 
-    load();
-
-  }, [location.state]);
+    semestreService
+      .getAllByMentionIncrementor(incrementor)
+      .then(setSemestres)
+      .catch(() => setSemestres([]));
+  }, [incrementor]);
 
   // DELETE
   async function handleDelete(id) {
@@ -120,256 +178,289 @@ export default function MentionEcueDetailList() {
 
   // EDIT
   function handleEdit(item) {
-
     navigate(
-      "/cotation/mention-ecue-details/edit",
-      {
-        state: {
-          mentionEcueDetail: item,
-        },
-      }
+      "/cotation/mention-ecue-details/edit",{state: {mentionEcueDetail: item,},}
     );
   }
 
-  // TABLE COLUMNS
-  const columns = [
+    const handleChange = (f) => (e) => {
+      const v = e.target.value;
 
-    {
-      header: "Mention",
+      setParam(p => ({
+        ...p,
+        [f]: v,
+        ...(f === "domaineId" && { filiereId: "", mentionId: "" }),
+        ...(f === "filiereId" && { mentionId: "" }),
+      }));
+    };
 
-      accessor: "mention",
+const handleSelectMention = (mention) => {
+  setParam((prev) => ({
+    ...prev,
+    mention: mention.id,
+    semestre: "",
+  }));
 
-      render: (row) => (
+  localStorage.setItem(STORAGE.mention, mention.id);
+  setIncrementor(mention.numeroSemestreIncementor || 0);
+};
 
-        <div className="fw-semibold">
-          {row?.mentionSemestre?.mention?.intitule ||
-            "-"}
-        </div>
-      ),
-    },
+const handleSelectSession = (semestre) => {
+  setParam((prev) => ({
+    ...prev,
+    semestre: semestre.id,
+  }));
 
-    {
-      header: "Semestre",
+  localStorage.setItem(STORAGE.semestre, semestre.id);
+};
 
-      accessor: "semestre",
+  // ================= HELPERS =================
+  const normalize = (t) =>
+    String(t || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
 
-      render: (row) => (
+  const filteredData = useMemo(() => {
+    const s = normalize(search);
 
-        <CBadge
-          color="info"
-          shape="rounded-pill"
-        >
-          {row.semestre?.semestreName ||
-            "-"}
-        </CBadge>
-      ),
-    },
+    return items.filter(i =>
+      normalize(`${i.ecue?.intitule} ${i.ecue?.ue?.intitule} `)
+        .includes(s)
+    );
+  }, [search, items]);
 
-    {
-      header: "ECUE",
-
-      accessor: "ecue",
-
-      render: (row) => (
-
-        <div className="fw-semibold">
-          {row.ecue?.intitule || "-"}
-        </div>
-      ),
-    },
-
-    {
-      header: "Maxima",
-
-      accessor: "maxima",
-
-      render: (row) => (
-
-        <div className="text-center fw-bold">
-          {row.maxima || 0}
-        </div>
-      ),
-    },
-
-    {
-      header: "Crédit",
-
-      accessor: "credit",
-
-      render: (row) => (
-
-        <div
-          className="
-            text-center
-            fw-bold
-            text-primary
-          "
-        >
-          {row.credit || 0}
-        </div>
-      ),
-    },
-
-    {
-      header: "Actions",
-
-      accessor: "actions",
-
-      render: (row) => (
-
-        <div
-          className="
-            d-flex
-            gap-1
-            justify-content-end
-          "
-        >
-
-          {/* EDIT */}
-          <CButton
-            color="warning"
-            size="sm"
-            variant="outline"
-            className="
-              d-flex
-              align-items-center
-              justify-content-center
-            "
-            onClick={() =>
-              handleEdit(row)
-            }
-          >
-
-            <CIcon
-              icon={cilPencil}
-            />
-
-          </CButton>
-
-          {/* DELETE */}
-          <CButton
-            color="danger"
-            size="sm"
-            variant="outline"
-            className="
-              d-flex
-              align-items-center
-              justify-content-center
-            "
-            onClick={() =>
-              handleDelete(row.id)
-            }
-          >
-
-            <CIcon
-              icon={cilTrash}
-            />
-
-          </CButton>
-
-        </div>
-      ),
-    },
-  ];
-
-  return (
-
-    <div className="container-fluid px-3">
-
-      <CCard className="border-1 shadow-sm">
+ return (
+    <div className="container-fluid px-2 px-md-2">
+      <CCard className="shadow-sm">
 
         {/* HEADER */}
-        <CCardHeader
-          className="
-            d-flex
-            justify-content-between
-            align-items-center
-            bg-light
-            py-3
-          "
-        >
-
-          <div>
-
-            <h5 className="mb-0 fw-bold">
-
-              Liste des ECUE par mention
-
-            </h5>
-
-            <small className="text-medium-emphasis">
-
-              Gestion des ECUE par
-              mention et semestre
-
-            </small>
-
-          </div>
-
-          <CButton
-            color="primary"
-            onClick={() =>
-              navigate(
-                "/cotation/mention-ecue-details/edit"
-              )
-            }
-          >
-
-            <CIcon
-              icon={cilPlus}
-              className="me-2"
-            />
-
-            Ajouter
-
-          </CButton>
-
-        </CCardHeader>
-
-        {/* BODY */}
-        <CCardBody>
-
-          {loading ? (
-
-            <div className="text-center py-5">
-
-              <CSpinner color="primary" />
-
-              <div className="mt-2">
-                Chargement...
+        <CCardHeader className="bg-light py-3 px-4">
+          <div className="d-flex justify-content-between">
+            <div>
+              <h4 className="fw-bold mb-1">Liste des étudiants délibérés</h4>
+              <div className="text-medium-emphasis">
+                Gestion académique des déliberations
               </div>
-
             </div>
 
-          ) : error ? (
+            <div>{param?.mention?.mentionName}</div>
+          </div>
+        </CCardHeader>
 
-            <CAlert color="danger">
-              {error}
-            </CAlert>
+        <CCardBody>
 
-          ) : items.length === 0 ? (
+        {/* FILTERS */}
+        <CRow className="bg-light border rounded p-2 mb-2 g-1"
+        >
+          {[
+            {
+              label: "Année",
+              icon: cilCalendar,
+              value: param.anneeId,
+              onChange: handleChange("anneeId"),
+              options: annees,
+              getLabel: (a) => a.annee,
+              getValue: (a) => a.id,
+            },
+            {
+              label: "Domaine",
+              icon: cilLibrary,
+              value: param.domaineId,
+              onChange: handleChange("domaineId"),
+              options: domaines,
+              getLabel: (d) => d.intitule,
+              getValue: (d) => d.id,
+            },
+            {
+              label: "Filière",
+              icon: cilEducation,
+              value: param.filiereId,
+              onChange: handleChange("filiereId"),
+              options: filieres,
+              getLabel: (f) => f.intitule,
+              getValue: (f) => f.id,
+            },
+          ].map((field) => (
+            <CCol key={field.label} xs={12} sm={6} md={4}>
+              <CInputGroup>
+                <CInputGroupText>
+                  <CIcon icon={field.icon} />
+                </CInputGroupText>
 
-            <CAlert color="warning">
+                <CFormSelect value={field.value} onChange={field.onChange}>
+                  <option value="">{field.label}</option>
 
-              Aucun élément trouvé
+                  {field.options?.map((opt) => (
+                    <option key={field.getValue(opt)} value={field.getValue(opt)}>
+                      {field.getLabel(opt)}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </CInputGroup>
+            </CCol>
+          ))}
 
-            </CAlert>
+        </CRow>
 
-          ) : (
+          <CRow className="g-4">
 
-            <Table
-              columns={columns}
-              data={items}
-              itemsPerPage={10}
-              enableSearch={true}
-            />
+            {/* SIDEBAR */}
+            <CCol lg={3}>
+              <CCard className="bg-light">
+                <CCardBody>
 
-          )}
+                  {/* SESSIONS */}
+                  <div className="mb-2">
+                    <div className="fw-bold mb-1">Semestre</div>
+                        <CListGroup>
+                          {semestres.map(item => (
+                            <CListGroupItem
+                              key={item.id}
+                              active={param?.semestre?.id === item.id}
+                              onClick={() => handleSelectSession(item)}
+                              className="mb-1 py-1"
+                              style={{ cursor: "hand" }}
+                            >
+                              {item.semestreName}
+                            </CListGroupItem>
+                          ))}
+                        </CListGroup>
+                  </div>
 
+                  {/* MENTIONS */}
+                  <div>
+                    <div className="fw-bold mb-2">Mentions</div>
+
+                    <CListGroup>
+                      {mentions.map(m => (
+                        <CListGroupItem
+                          key={m.id}
+                          active={param?.mention?.id === m.id}
+                          onClick={() => handleSelectMention(m)}
+                          style={{ cursor: "hand" }}
+                          className="mb-1 py-1"
+                        >
+                          {m?.niveau?.intitule} {m?.intitule}
+                        </CListGroupItem>
+                      ))}
+                    </CListGroup>
+                  </div>
+
+                </CCardBody>
+              </CCard>
+            </CCol>
+
+            {/* CONTENT */}
+            <CCol lg={9}>
+              <CCard>
+                <CCardBody>
+
+                  {/* SEARCH */}
+                  <div className="d-flex justify-content-between mb-3">
+                    <div className="justify-content-center">{filteredData.length} élément(s)</div>
+
+                    <CInputGroup style={{ maxWidth: 350 }}>
+                      <CInputGroupText><CIcon icon={cilSearch} /></CInputGroupText>
+                      <CFormInput placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                    </CInputGroup>
+                  </div>
+
+            {/* TABLE */}
+                  {loading ? (
+                    <div className="text-center py-3">
+                      <CSpinner color="primary" />
+                    </div>
+
+                  ) : error ? (
+                    <CAlert color="danger">
+                      {error}
+                    </CAlert>
+
+                  ) : filteredData.length ===
+                    0 ? (
+                    <CAlert color="warning">
+                      Aucun etudiant inscrit
+                    </CAlert>
+
+                  ) : (
+                      <div className="table-responsive">
+                    <CTable hover className="align-middle mb-0 border">
+                      <CTableHead className="table-light">
+                        <CTableRow>
+                            <CTableHeaderCell>UE</CTableHeaderCell>
+                            <CTableHeaderCell>Intitulé</CTableHeaderCell>
+                            <CTableHeaderCell>Crédit</CTableHeaderCell>
+                            <CTableHeaderCell>CMI</CTableHeaderCell>
+                            <CTableHeaderCell>TD</CTableHeaderCell>
+                            <CTableHeaderCell>TP</CTableHeaderCell>
+                            <CTableHeaderCell>Total</CTableHeaderCell>
+                            <CTableHeaderCell className="text-end"></CTableHeaderCell>
+                        </CTableRow>
+                      </CTableHead>
+
+                      <CTableBody>
+                        {filteredData.map((row, i) => (
+                          <CTableRow className="py-0" key={row?.inscription?.id || i}>
+                            <CTableDataCell className="py-0">
+                                <div className="fw-semibold"> {row?.ecue?.ue?.code || "-"}</div>
+                            </CTableDataCell>
+
+                           <CTableDataCell className="py-0 text-wrap"
+                                         >
+                               <div className="fw-semibold"> {row?.ecue?.intitule || "-"}</div>
+                           </CTableDataCell>
+
+                            <CTableDataCell>
+                                <div className="fw-semibold"> {row.credit || 0}</div>
+                            </CTableDataCell>
+
+                            <CTableDataCell>
+                                <div className="fw-semibold"> {row?.ecue?.nombreHeureCmi || 0} h</div>
+                            </CTableDataCell>
+
+                            <CTableDataCell>
+                                <div className="fw-semibold">{row?.ecue?.nombreHeureTd || 0} h</div>
+                            </CTableDataCell>
+
+                            <CTableDataCell>
+                                <div className="fw-semibold"> {row?.ecue?.nombreHeureTp || 0} h</div>
+                            </CTableDataCell>
+
+                            <CTableDataCell>
+                              {(() => {
+                                const total =
+                                  (Number(row?.ecue?.nombreHeureCmi) || 0) +
+                                  (Number(row?.ecue?.nombreHeureTd) || 0) +
+                                  (Number(row?.ecue?.nombreHeureTp) || 0);
+
+                                return <div className="fw-semibold">{total} h</div>;
+                              })()}
+                            </CTableDataCell>
+
+                            <CTableDataCell className="text-end">
+                               <div className="d-flex justify-content-end">
+                                   <CButton
+                                     color="light"
+                                     size="sm"
+                                     onClick={() => handleEdit(row)}
+                                     >
+                                     <CIcon icon={cilPencil} />
+                                   </CButton>
+                               </div>
+                            </CTableDataCell>
+                          </CTableRow>
+                        ))}
+                      </CTableBody>
+                    </CTable>
+                     </div>
+                  )}
+                </CCardBody>
+              </CCard>
+            </CCol>
+          </CRow>
         </CCardBody>
-
       </CCard>
-
     </div>
   );
 }

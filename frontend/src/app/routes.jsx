@@ -34,11 +34,16 @@ const EditSemestre = React.lazy(() => import('@src/views/modules/cotation/pages/
 const EditSession = React.lazy(() => import('@src/views/modules/cotation/pages/EditSession'));
 const EditUniteEnseignement = React.lazy(() => import('@src/views/modules/cotation/pages/EditUniteEnseignement'));
 const EditElementConstitutif = React.lazy(() => import('@src/views/modules/cotation/pages/EditElementConstitutif'));
-const EditMentionEcueDetail = React.lazy(() => import('@src/views/modules/cotation/pages/EditMentionEcueDetail'));
+const EditMentionSemestreEcue = React.lazy(() => import('@src/views/modules/cotation/pages/EditMentionSemestreEcue'));
 
 const DeliberationList = React.lazy(() => import('@src/views/modules/deliberation/pages/DeliberationList'));
-const DeliberationMention = React.lazy(() => import('@src/views/modules/deliberation/pages/DeliberationMention'));
+const DeliberationValidation = React.lazy(() => import('@src/views/modules/deliberation/pages/DeliberationValidation'));
 const DeliberationDashBoard = React.lazy(() => import('@src/views/modules/deliberation/pages/DashBoard'));
+const PersonnelList = React.lazy(() => import('@src/views/modules/deliberation/pages/PersonnelList'));
+const MembreJury = React.lazy(() => import('@src/views/modules/deliberation/pages/MembreJury'));
+
+const EditPersonnel = React.lazy(() => import('@src/views/modules/deliberation/pages/EditPersonnel'));
+const EditJuryMembre = React.lazy(() => import('@src/views/modules/deliberation/pages/EditJuryMembre'));
 
 const routes = [
   { path: '/login', name: 'Home' },
@@ -83,15 +88,20 @@ const routes = [
   { path: '/cotation/session/edit', element: <EditSession /> },
   { path: '/cotation/unite-enseignement/edit', element: <EditUniteEnseignement /> },
   { path: '/cotation/element-constitutif/edit', element: <EditElementConstitutif /> },
-  { path: '/cotation/mention-ecue-details/edit', element: <EditMentionEcueDetail /> },
+  { path: '/cotation/mention-ecue-details/edit', element: <EditMentionSemestreEcue /> },
 
   // ===================== FIN MODULE COTATION ============================================
 
   // ========================= MODULE DELIBERATION =========================================
 
     { path: '/deliberation/list', element: <DeliberationList /> },
-    { path: '/deliberation/traitement', element: <DeliberationMention /> },
+    { path: '/deliberation/validation', element: <DeliberationValidation /> },
     { path: '/deliberation/dashboard', element: <DeliberationDashBoard /> },
+    { path: '/deliberation/personnel', element: <PersonnelList /> },
+    { path: '/deliberation/membre-jury', element: <MembreJury /> },
+
+    { path: '/deliberation/personnel/edit', element: <EditPersonnel /> },
+     { path: '/deliberation/membre-jury/edit', element: <EditJuryMembre /> },
 
     // ================= FIN MODULE DELIBERATION ===============================================
 ];
