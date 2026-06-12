@@ -8,6 +8,8 @@ public class MentionSemestreEcuePojo {
 
     private MentionSemestreEcueDetail mentionSemestreEcueDetail;
 
+    private EchecEcueProjection echec;
+
     private Boolean estCote;
 
     private Boolean allNotes;
@@ -22,6 +24,14 @@ public class MentionSemestreEcuePojo {
 
     public void setMentionSemestreEcueDetail(MentionSemestreEcueDetail mentionSemestreEcueDetail) {
         this.mentionSemestreEcueDetail = mentionSemestreEcueDetail;
+    }
+
+    public EchecEcueProjection getEchec() {
+        return echec;
+    }
+
+    public void setEchec(EchecEcueProjection echec) {
+        this.echec = echec;
     }
 
     public Boolean getEstCote() {

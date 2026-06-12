@@ -127,7 +127,7 @@ export default function CotationList() {
 
   useEffect(() => {
     const loadCotation = async () => {
-        if (!selectedSession?.id || !selectedSession?.semestre?.id || !selectedRow?.id) {
+        if (!visible || !selectedSession?.id || !selectedSession?.semestre?.id || !selectedRow?.id) {
             setCotation({});
             return;
         }
@@ -143,7 +143,7 @@ export default function CotationList() {
         }
     };
     loadCotation();
-  }, [visible, selectedSession, selectedRow, param?.anneeId]);
+  }, [visible, selectedSession?.semestre?.id, param?.anneeId, selectedSession?.id, selectedRow?.id]);
 
   // ================= LOAD FILIERE BY DOMAINE =================
   useEffect(() => {
@@ -185,68 +185,71 @@ export default function CotationList() {
 
   // ================= Load cotations by mentionId, anneeId et SemestreId =================
     useEffect(() => {
-      if (!param.mentionId || !param.anneeId || !selectedSession?.semestre?.id) {
+      if (
+        !param?.mentionId ||
+        !param?.anneeId ||
+        !selectedSession?.semestre?.id ||
+        !selectedSession?.id
+      ) {
         setCotations([]);
         return;
       }
 
       let active = true;
 
-      (async () => {
+      const loadData = async () => {
         try {
-          const data = await cotationDetailService.getAllByMentionSemestreAnneeSession(
-              param.mentionId, selectedSession.semestre.id,
-              param.anneeId, selectedSession.id,
+          const data =
+            await cotationDetailService.getAllByMentionSemestreAnneeSession(
+              param.mentionId,
+              selectedSession.semestre.id,
+              param.anneeId,
+              selectedSession.id
             );
 
-          if (active) setCotations(data || []);
-        } catch {
-          if (active) setCotations([]);
-        }
-      })();
+          if (active) {
+            setCotations(data ?? []);
+          }
+        } catch (error) {
+          console.error(error);
 
-      return () => { active = false; };
-    }, [param.mentionId, param.anneeId, selectedSession]);
+          if (active) {
+            setCotations([]);
+          }
+        }
+      };
+
+      loadData();
+
+      return () => {
+        active = false;
+      };
+    }, [param?.mentionId, param?.anneeId, selectedSession?.semestre?.id, selectedSession?.id,]);
 
   // ================= INSCRIPTIONS =================
-useEffect(() => {
-  if (
-    !param?.anneeId ||
-    !param?.mentionId ||
-    !selectedSession?.semestre?.id ||
-    !selectedSession?.id
-  ) {
-    setInscriptions([]);
-    return;
-  }
+    useEffect(() => {
+      if (!visible || !param?.anneeId || !selectedMention?.id || !selectedSession?.semestre?.id || !selectedRow?.id
+      ) {
+        setInscriptions([]);
+        return;
+      }
 
-  inscriptionService
-    .getAllByMentionAnneeSemestreSession(
-      param?.mentionId,
-      param?.anneeId,
-      selectedSession?.semestre?.id,
-      selectedSession?.id
-    )
-    .then((data) => {
-      setInscriptions(data);
-    })
-    .catch((error) => {
-      console.error(error);
-      setInscriptions([]);
-    });
+      inscriptionService
+        .getAllByMentionAnneeSemestreSessionMentionSemestre(
+          selectedMention?.id,
+          param?.anneeId,
+          selectedSession?.semestre?.id,
+          selectedSession?.id, selectedRow?.id
+        )
+        .then((data) => {
+          setInscriptions(data);
+        })
+        .catch((error) => {
+          console.error(error);
+          setInscriptions([]);
+        });
 
-}, [
-  param?.mentionId,
-  param?.anneeId,
-  selectedSession?.semestre?.id,
-  selectedSession?.id,
-]);
-
-useEffect(() => {
-  console.log("inscriptions mises à jour :", inscriptions);
-}, [inscriptions]);
-
-
+    }, [visible, param?.anneeId, selectedMention?.id, selectedSession?.semestre?.id, selectedSession?.id, selectedRow?.id]);
 
   // ================= HELPERS =================
   const normalize = (t) =>
@@ -475,6 +478,7 @@ useEffect(() => {
                         <CTableRow>
                           <CTableHeaderCell>ECUE</CTableHeaderCell>
                           <CTableHeaderCell>Crédit</CTableHeaderCell>
+                          <CTableHeaderCell></CTableHeaderCell>
                           <CTableHeaderCell className="text-end">Actions</CTableHeaderCell>
                         </CTableRow>
                       </CTableHead>
@@ -482,31 +486,47 @@ useEffect(() => {
                       <CTableBody>
                         {filteredData.map((row, i) => (
                           <CTableRow className="py-0" key={row?.mentionSemestreEcueDetail?.id || i}>
-                            <CTableDataCell className="py-0">
+                            <CTableDataCell style={{maxWidth:"50%"}} className="py-0">
                               <div className="fw-semibold">{row?.mentionSemestreEcueDetail?.ecueName}</div>
                               <small className="text-muted">{row?.ecue?.ue?.intitule}</small>
                             </CTableDataCell>
 
                             <CTableDataCell>
-                                <CRow>
                                 <CCol>
-                                    <CBadge
-                                      className={`px-2 py-1 rounded-pill border border-2 ${
-                                        row?.estCote ? "border-success" : "border-danger"
-                                      }`}
-                                    >
-                                      <span className="fw-bold text-dark">
-                                        {row?.mentionSemestreEcueDetail?.credit ?? "-"}
-                                      </span>
-                                    </CBadge>
+                                    <div className="position-relative d-inline-block">
+                                      <CBadge
+                                        className={`px-2 py-1 rounded-pill border border-2 ${
+                                          row?.estCote ? "border-success" : "border-danger"
+                                        }`}
+                                      >
+                                        <span className="fw-bold text-dark">
+                                          {row?.mentionSemestreEcueDetail?.credit ?? "-"}
+                                        </span>
+                                      </CBadge>
+
+                                      {selectedSession?.numero % 2 === 0 && selectedSession?.numero > 0 && (
+                                        <CBadge
+                                          color="success"
+                                          shape="rounded-pill"
+                                          className="position-absolute top-0 start-100 translate-middle ms-2 mt-1"
+                                          style={{
+                                            minWidth: "20px",
+                                            height: "20px",
+                                            fontSize: "0.75rem",
+                                          }}
+                                        >
+                                          {row?.echec?.count ?? 0}
+                                        </CBadge>
+                                      )}
+                                    </div>
                                  </CCol>
-                                  <CCol>
-                                    <CBadge color="info">
-                                        {row?.countWithCote || "0"} coté(s), {"  "}
-                                        {row?.countManqueCote || "0"} manque de cote(s)
-                                    </CBadge>
-                                  </CCol>
-                               </CRow>
+                            </CTableDataCell>
+
+                            <CTableDataCell>
+                                <CBadge color="info">
+                                    {row?.countWithCote || "0"} coté(s), {"  "}
+                                    {row?.countManqueCote || "0"} manque de cote(s)
+                                </CBadge>
                             </CTableDataCell>
 
                             <CTableDataCell className="text-end">

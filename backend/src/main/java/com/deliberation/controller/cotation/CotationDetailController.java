@@ -233,11 +233,15 @@ public class CotationDetailController {
             .stream()
             .map(mentionSemestreEcueDetail -> {
                 var m = new MentionSemestreEcuePojo();
+                var eches = service.countEchecsByMentionSemestreEcue(mentionId, anneeId, semestreId, sessionId, mentionSemestreEcueDetail.getId()).orElse(null);
+
                 var countWithCote = cotation.map(c -> service.count(c.getId(), mentionSemestreEcueDetail.getId())).orElse(0L);
                 var countManqueCote = total - countWithCote;
+
                 m.setMentionSemestreEcueDetail(mentionSemestreEcueDetail);
                 m.setCountWithCote(countWithCote);
                 m.setCountManqueCote(countManqueCote);
+                m.setEchec(eches);
 
                 return m;
             })

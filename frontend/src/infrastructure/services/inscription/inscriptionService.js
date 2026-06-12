@@ -28,6 +28,8 @@ export default {
     // GET /mention/{mentionId}/annee/{anneeId}/semestre/{semestreId}/session/{sessionId}
     getAllByMentionAnneeSemestreSession: (mentionId, anneeId, semestreId, sessionId) => api.getAll(entity, {path: `mention/${mentionId}/annee/${anneeId}/semestre/${semestreId}/session/${sessionId}`,}),
 
+    getAllByMentionAnneeSemestreSessionMentionSemestre: (mentionId, anneeId, semestreId, sessionId, mentionSemestreEcueId) => api.getAll(entity, {path: `mention/${mentionId}/annee/${anneeId}/semestre/${semestreId}/session/${sessionId}/mentionSemestreEcue/${mentionSemestreEcueId}`,}),
+
     getAllByAnneeMention: (anneeId, mentionId) => api.getAll(entity, {path: `annee/${anneeId}/mention/${mentionId}`,}),
 
     // GET /etudiant/{etudiantId}/annee/{anneeId}

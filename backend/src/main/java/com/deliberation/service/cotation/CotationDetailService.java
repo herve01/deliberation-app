@@ -1,6 +1,7 @@
 package com.deliberation.service.cotation;
 
 import com.deliberation.model.cotation.CotationDetail;
+import com.deliberation.model.cotation.pojo.EchecEcueProjection;
 import com.deliberation.repository.cotation.CotationDetailRepository;
 import com.deliberation.service.IService;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,18 @@ public class CotationDetailService implements IService<CotationDetail, String> {
         return repository.findById(id);
     }
 
+    public Optional<EchecEcueProjection> countEchecsByMentionSemestreEcue(String mentionId, String anneeId, String semestreId, String sessionId, String mentionSemestreEcueId) {
+        var echec = new EchecEcueProjection();
+        var result = repository.countEchecsByMentionSemestreEcue(mentionId, anneeId, semestreId, sessionId, mentionSemestreEcueId);
+
+        if (result.isPresent()) {
+            echec.setMentionSemestreEcueId(result.get().getMentionSemestreEcueId());
+            echec.setCount(result.get().getCount());
+        }
+
+        return Optional.of(echec);
+    }
+
     public Optional<CotationDetail> get(String cotationId, String mentionSemestreEcueId) {
         return repository.findOneByCotationIdAndMentionSemestreEcueId(cotationId, mentionSemestreEcueId);
     }
@@ -64,6 +77,10 @@ public class CotationDetailService implements IService<CotationDetail, String> {
     public long count(String cotationId, String mentionSemestreEcueId)
     {
         return  repository.countByCotationIdAndMentionSemestreEcueIdAndNoteIsNotNull(cotationId, mentionSemestreEcueId);
+    }
+
+    public long countEchecsByMentionSemestreEcue2(String anneeId, String mentionId, String semestreId, String sessionId, String mentionSemestreEcueId) {
+        return repository.countEchecsByMentionSemestreEcue2(mentionId, anneeId, semestreId, sessionId, mentionSemestreEcueId);
     }
 
     @Override

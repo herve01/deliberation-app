@@ -144,6 +144,11 @@ public class InscriptionService implements IService<Inscription, String> {
                 .findEligibleInscriptions(mentionId, anneeId, semestreId, sessionId);
     }
 
+    public List<Inscription> getAllBy(String anneeId, String mentionId, String semestreId, String sessionId, String mentionSemestreEcueId) {
+        return repository
+                .findInscriptions(mentionId, anneeId, semestreId, sessionId, mentionSemestreEcueId);
+    }
+
     public Optional<Inscription> get(String etudiantId, String anneeId, String mentionId) {
         return repository
                 .findOneByEtudiant_IdAndAnnee_IdAndMention_Id(
@@ -239,5 +244,9 @@ public class InscriptionService implements IService<Inscription, String> {
                 debut,
                 fin
         );
+    }
+
+    public long countByMentionAnnneeSemestreSessionMentionSemestre(String anneeId, String mentionId, String semestreId, String sessionId, String mentionSemestreEcueId) {
+        return repository.countByMentionAnnneeSemestreSessionMentionSemestre(mentionId, anneeId, semestreId, sessionId, mentionSemestreEcueId);
     }
 }

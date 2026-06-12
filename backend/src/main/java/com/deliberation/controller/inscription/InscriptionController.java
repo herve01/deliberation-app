@@ -70,11 +70,20 @@ public class InscriptionController {
 
     @GetMapping("/mention/{mentionId}/annee/{anneeId}/semestre/{semestreId}/session/{sessionId}")
     @Operation(summary = "Lister les inscriptions")
-    public List<Inscription> getByType(@PathVariable String mentionId,  @PathVariable String anneeId,
+    public List<Inscription> getBy(@PathVariable String mentionId,  @PathVariable String anneeId,
                                        @PathVariable String semestreId, @PathVariable String sessionId) {
         logger.info("[InscriptionController] GET /api/inscriptions/mention/{}/annee/{}/semestre/{}/session/{}", mentionId, anneeId, semestreId, sessionId);
 
         return service.getAllBy(anneeId, mentionId, semestreId, sessionId);
+    }
+
+    @GetMapping("/mention/{mentionId}/annee/{anneeId}/semestre/{semestreId}/session/{sessionId}/mentionSemestreEcue/{mentionSemestreEcueId}")
+    @Operation(summary = "Lister les inscriptions")
+    public List<Inscription> getBy(@PathVariable String mentionId,  @PathVariable String anneeId,
+                                       @PathVariable String semestreId, @PathVariable String sessionId, @PathVariable String mentionSemestreEcueId) {
+        logger.info("[InscriptionController] GET /api/inscriptions/mention/{}/annee/{}/semestre/{}/session/{}", mentionId, anneeId, semestreId, sessionId);
+
+        return service.getAllBy(anneeId, mentionId, semestreId, sessionId, mentionSemestreEcueId);
     }
 
     @GetMapping("/etudiant/{etudiantId}/annee/{anneeId}")

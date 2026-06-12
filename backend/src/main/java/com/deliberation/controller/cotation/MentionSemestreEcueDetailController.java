@@ -27,26 +27,17 @@ public class MentionSemestreEcueDetailController {
     private final CategorieService categorieService;
     private final EcueService ecueService;
     private final MentionSemestreEcueService mentionService;
-    private final CotationService cotationService;
-    private final CotationDetailService detailService;
-    private final InscriptionService inscriptionService;
 
     public MentionSemestreEcueDetailController(
             MentionSemestreEcueDetailService service,
             CategorieService categorieService,
             EcueService ecueService,
-            MentionSemestreEcueService mentionService,
-            CotationService cotationService,
-            CotationDetailService detailService,
-            InscriptionService inscriptionService
+            MentionSemestreEcueService mentionService
     ) {
         this.service = service;
         this.categorieService = categorieService;
         this.ecueService = ecueService;
         this.mentionService = mentionService;
-        this.cotationService = cotationService;
-        this.detailService = detailService;
-        this.inscriptionService = inscriptionService;
     }
 
     @GetMapping
@@ -61,8 +52,6 @@ public class MentionSemestreEcueDetailController {
 
         return service.getAll();
     }
-
-
 
     @GetMapping("/{id}")
     @Operation(

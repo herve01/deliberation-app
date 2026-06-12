@@ -94,4 +94,75 @@ public interface InscriptionRepository extends JpaRepository<Inscription, String
     List<Inscription> findEligibleInscriptions(
             @Param("mentionId") String mentionId, @Param("anneeId") String anneeId,
             @Param("semestreId") String semestreId, @Param("sessionId") String sessionId);
+
+
+    @Query(value = """
+    SELECT i.*
+    FROM inscription i
+    WHERE i.mention_id = :mentionId
+      AND i.annee_id = :anneeId
+      AND NOT EXISTS (
+          SELECT 1
+          FROM cotation c
+          INNER JOIN cotation_detail cd
+              ON c.id = cd.cotation_id
+          WHERE cd.inscription_id = i.id
+            AND cd.mention_semestre_ecue_id = :mentionSemestreEcueId
+            AND c.mention_id = :mentionId
+            AND c.semestre_id = :semestreId
+            AND c.session_id IN (
+                SELECT s.id
+                FROM session s
+                WHERE s.numero < (
+                    SELECT s2.numero
+                    FROM session s2
+                    WHERE s2.id = :sessionId
+                )
+            )
+          GROUP BY cd.mention_semestre_ecue_id
+          HAVING SUM(cd.note) >= 10
+      )
+    """, nativeQuery = true)
+    List<Inscription> findInscriptions(
+            String mentionId,
+            String anneeId,
+            String semestreId,
+            String sessionId,
+            String mentionSemestreEcueId
+            );
+
+    @Query(value = """
+    SELECT count(*)
+    FROM inscription i
+    WHERE i.mention_id = :mentionId
+      AND i.annee_id = :anneeId
+      AND NOT EXISTS (
+          SELECT 1
+          FROM cotation c
+          INNER JOIN cotation_detail cd
+              ON c.id = cd.cotation_id
+          WHERE cd.inscription_id = i.id
+            AND cd.mention_semestre_ecue_id = :mentionSemestreEcueId
+            AND c.mention_id = :mentionId
+            AND c.semestre_id = :semestreId
+            AND c.session_id IN (
+                SELECT s.id
+                FROM session s
+                WHERE s.numero < (
+                    SELECT s2.numero
+                    FROM session s2
+                    WHERE s2.id = :sessionId
+                )
+            )
+          GROUP BY cd.mention_semestre_ecue_id
+          HAVING SUM(cd.note) >= 10
+      )
+    """, nativeQuery = true)
+    long countByMentionAnnneeSemestreSessionMentionSemestre(
+            String mentionId,
+            String anneeId,
+            String semestreId,
+            String sessionId,
+            String mentionSemestreEcueId
+    );
 }
